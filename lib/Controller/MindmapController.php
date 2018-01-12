@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * @copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
  *
@@ -23,8 +24,7 @@
 
 namespace OCA\Mindmaps\Controller;
 
-use OCA\Mindmaps\Exception\BadRequestException;
-use OCA\Mindmaps\Exception\NotFoundException;
+use OCA\Mindmaps\Exception\{BadRequestException, NotFoundException};
 use OCA\Mindmaps\Service\MindmapService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\DataResponse;
@@ -32,90 +32,130 @@ use OCP\IRequest;
 
 class MindmapController extends Controller {
 
-    private $mindmapService;
-    private $userId;
+	/** @var MindmapService */
+	private $mindmapService;
+	/** @var string */
+	private $userId;
 
-    /**
-     * MindmapController constructor.
-     *
-     * @param string $appName
-     * @param IRequest $request
-     * @param MindmapService $mindmapService
-     * @param string $userId
-     */
-    public function __construct($appName,
-                                IRequest $request,
-                                MindmapService $mindmapService,
-                                $userId) {
-        parent::__construct($appName, $request);
-        $this->mindmapService = $mindmapService;
-        $this->userId = $userId;
-    }
+	/**
+	 * MindmapController constructor.
+	 *
+	 * @param string $appName
+	 * @param IRequest $request
+	 * @param MindmapService $mindmapService
+	 * @param string $userId
+	 */
+	public function __construct(
+		string $appName,
+		IRequest $request,
+		MindmapService $mindmapService,
+		string $userId
+	) {
+		parent::__construct($appName, $request);
+		$this->mindmapService = $mindmapService;
+		$this->userId = $userId;
+	}
 
-    /**
-     * Return all mindmaps as json.
-     *
-     * @NoAdminRequired
-     *
-     * @return DataResponse
-     */
-    public function index() {
-        return new DataResponse($this->mindmapService->findAll($this->userId));
-    }
+	/**
+	 * Return all mindmaps as json.
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @param null|int $limit
+	 * @param null|int $offset
+	 *
+	 * @return DataResponse
+	 */
+	public function index(int $limit = null, int $offset = null): DataResponse {
+		return new DataResponse(
+			$this->mindmapService->findAll($this->userId, $limit, $offset)
+		);
+	}
 
-    /**
-     * Create a minmap with the given parameters.
-     *
-     * @NoAdminRequired
-     *
-     * @param string $title
-     * @param string $description
-     *
-     * @return DataResponse
-     */
-    public function create($title, $description) {
-        try {
-            return new DataResponse($this->mindmapService->create($title, $description, $this->userId));
-        } catch (BadRequestException $ex) {
-            return new DataResponse(array('msg' => $ex->getMessage()), $ex->getCode());
-        }
-    }
+	/**
+	 * Return a single mindmap by its id.
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @param int $id
+	 *
+	 * @return DataResponse
+	 *
+	 * @throws \Exception
+	 */
+	public function read(int $id): DataResponse {
+		try {
+			return new DataResponse($this->mindmapService->findByUser($id, $this->userId));
+		} catch (NotFoundException $ex) {
+			return new DataResponse(array('msg' => $ex->getMessage()), $ex->getCode());
+		}
+	}
 
-    /**
-     * Update a given mindmap with the given parameters.
-     *
-     * @NoAdminRequired
-     *
-     * @param integer $mindmapId
-     * @param string $title
-     * @param string $description
-     *
-     * @return DataResponse
-     */
-    public function update($mindmapId, $title, $description) {
-        try {
-            return new DataResponse($this->mindmapService->update($mindmapId, $title, $description, $this->userId));
-        } catch (NotFoundException $ex) {
-            return new DataResponse(array('msg' => $ex->getMessage()), $ex->getCode());
-        } catch (BadRequestException $ex) {
-            return new DataResponse(array('msg' => $ex->getMessage()), $ex->getCode());
-        }
-    }
+	/**
+	 * Create a mindmap with the given parameters.
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @param string $title
+	 * @param string $description
+	 *
+	 * @return DataResponse
+	 */
+	public function create(string $title, string $description): DataResponse {
+		try {
+			return new DataResponse(
+				$this->mindmapService->create($title, $description, $this->userId)
+			);
+		} catch (BadRequestException $ex) {
+			return new DataResponse(array('msg' => $ex->getMessage()), $ex->getCode());
+		}
+	}
 
-    /**
-     * Delete the given mindmap.
-     *
-     * @NoAdminRequired
-     *
-     * @param integer $mindmapId
-     *
-     * @return DataResponse
-     */
-    public function delete($mindmapId) {
-        try {
-            return new DataResponse($this->mindmapService->delete($mindmapId));
-        } catch (NotFoundException $ex) {
-            return new DataResponse(array('msg' => $ex->getMessage()), $ex->getCode());
-        }
-    }
+	/**
+	 * Update a given mindmap with the given parameters.
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @param int $id
+	 * @param string $title
+	 * @param string $description
+	 *
+	 * @return DataResponse
+	 *
+	 * @throws \Exception
+	 */
+	public function update(
+		int $id,
+		string $title,
+		string $description
+	): DataResponse {
+		try {
+			return new DataResponse(
+				$this->mindmapService->update($id, $title, $description, $this->userId)
+			);
+		} catch (BadRequestException $ex) {
+			return new DataResponse(array('msg' => $ex->getMessage()), $ex->getCode());
+		} catch (NotFoundException $ex) {
+			return new DataResponse(array('msg' => $ex->getMessage()), $ex->getCode());
+		}
+	}
+
+	/**
+	 * Delete a given mindmap.
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @param int $id
+	 *
+	 * @return DataResponse
+	 *
+	 * @throws \Exception
+	 */
+	public function delete(int $id): DataResponse {
+		try {
+			return new DataResponse($this->mindmapService->delete($id, $this->userId));
+		} catch (NotFoundException $ex) {
+			return new DataResponse(array('msg' => $ex->getMessage()), $ex->getCode());
+		}
+	}
 }

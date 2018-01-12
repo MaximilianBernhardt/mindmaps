@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * @copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
  *
@@ -24,12 +25,9 @@
 namespace OCA\Mindmaps\Tests\Unit\Db;
 
 use League\FactoryMuffin\Faker\Facade as Faker;
-use OCA\Mindmaps\Db\AclMapper;
-use OCA\Mindmaps\Db\Mindmap;
-use OCA\Mindmaps\Db\MindmapMapper;
-use OCA\Mindmaps\Db\MindmapNodeMapper;
+use OCA\Mindmaps\Db\{AclMapper, Mindmap, MindmapMapper, MindmapNodeMapper};
 use OCA\Mindmaps\Tests\Unit\UnitTestCase;
-use OCP\IDBConnection;
+use OCP\{IDBConnection, IGroupManager, IUserManager};
 
 class MindmapMapperTest extends UnitTestCase {
 
@@ -41,6 +39,10 @@ class MindmapMapperTest extends UnitTestCase {
 	private $mindmapNodeMapper;
 	/** @var AclMapper */
 	private $aclMapper;
+	/** @var IUserManager */
+	private $userManager;
+	/** @var IGroupManager */
+	private $groupManager;
 
 	/**
 	 * {@inheritDoc}
@@ -49,19 +51,32 @@ class MindmapMapperTest extends UnitTestCase {
 		parent::setUp();
 		$this->con = \OC::$server->getDatabaseConnection();
 		$this->aclMapper = new AclMapper($this->con);
-		$this->mindmapNodeMapper = new MindmapNodeMapper(($this->con));
-		$this->mindmapMapper = new MindmapMapper($this->con, $this->mindmapNodeMapper, $this->aclMapper);
+		$this->mindmapNodeMapper = new MindmapNodeMapper($this->con);
+		$this->userManager = $this->getMockBuilder(IUserManager::class)
+			->disableOriginalConstructor()
+			->getMock();
+		$this->groupManager = $this->getMockBuilder(IGroupManager::class)
+			->disableOriginalConstructor()
+			->getMock();
+		$this->mindmapMapper = new MindmapMapper(
+			$this->con,
+			$this->mindmapNodeMapper,
+			$this->aclMapper,
+			$this->groupManager,
+			$this->userManager
+		);
 	}
 
 	/**
-	 * Test the creation of an mindmap object and save it to the database.
+	 * Test the creation of a mindmap object and save it to the database.
 	 *
 	 * @return Mindmap
 	 */
-	public function testCreate() {
+	public function testCreate(): Mindmap {
 		/** @var Mindmap $mindmap */
-		$mindmap = $this->fm->instance('OCA\Mindmaps\Db\Mindmap');
-		$this->assertInstanceOf(Mindmap::class, $this->mindmapMapper->insert($mindmap));
+		$mindmap = $this->fm->instance(Mindmap::class);
+		$mindmap = $this->mindmapMapper->insert($mindmap);
+		$this->assertInstanceOf(Mindmap::class, $mindmap);
 		return $mindmap;
 	}
 
@@ -69,15 +84,19 @@ class MindmapMapperTest extends UnitTestCase {
 	 * Update the previously created mindmap.
 	 *
 	 * @depends testCreate
+	 *
 	 * @param Mindmap $mindmap
+	 *
 	 * @return Mindmap
 	 */
-	public function testUpdate(Mindmap $mindmap) {
-		$title = Faker::sentence(10);
-		$description = Faker::sentence(20);
-		$mindmap->setTitle($title());
-		$mindmap->setDescription($description());
-		$this->mindmapMapper->update($mindmap);
+	public function testUpdate(Mindmap $mindmap): Mindmap {
+		$title = Faker::sentence(10)();
+		$description = Faker::sentence(20)();
+		$mindmap->setTitle($title);
+		$mindmap->setDescription($description);
+		/** @var Mindmap $mindmap */
+		$mindmap = $this->mindmapMapper->update($mindmap);
+		$this->assertEquals($title, $mindmap->getTitle());
 		return $mindmap;
 	}
 
@@ -86,9 +105,12 @@ class MindmapMapperTest extends UnitTestCase {
 	 * Delete the previously created mindmap from the database.
 	 *
 	 * @depends testUpdate
+	 *
 	 * @param Mindmap $mindmap
 	 */
 	public function testDelete(Mindmap $mindmap) {
-		$this->mindmapMapper->delete($mindmap);
+		/** @var Mindmap $mindmap */
+		$mindmap = $this->mindmapMapper->delete($mindmap);
+		$this->assertInstanceOf(Mindmap::class, $mindmap);
 	}
 }

@@ -5,8 +5,8 @@
 [![Code Coverage](https://img.shields.io/scrutinizer/coverage/g/splitt3r/mindmaps.svg?style=flat-square)](https://scrutinizer-ci.com/g/splitt3r/mindmaps)
 [![Software License](https://img.shields.io/badge/license-AGPL-brightgreen.svg?style=flat-square)](LICENSE)
 
-This Nextcloud app allows you to create awesome mindmaps together with you colleagues.
-You can easily work together on your mindmaps and see who´s working on wich node of the mindmap.
+This Nextcloud app allows you to create awesome mindmaps together with your colleagues.
+You can easily work together on your mindmaps and see who´s working on which node of the mindmap.
 App icon by [Icons8](https://icons8.com) and mindmaps powered by [Vis.js](http://visjs.org/).
 
 ### Features
@@ -23,7 +23,7 @@ App icon by [Icons8](https://icons8.com) and mindmaps powered by [Vis.js](http:/
 ![Sharing](https://github.com/splitt3r/mindmaps/blob/master/screenshots/mindmaps_sharing.png)
 
 ## Installation / Update
-This app is supposed to work on Nextcloud version 11+.
+This app is supposed to work on Nextcloud 13+ and PHP 7+.
 
 ### Install latest release
 You can download and install the latest release from the [Nextcloud app store](https://apps.nextcloud.com/apps/mindmaps).
@@ -33,6 +33,7 @@ If you want to run the latest development version from git source, you need to c
 
 ```
 git clone https://github.com/splitt3r/mindmaps.git
+make npm
 ```
 
 ## Contribution Guidelines

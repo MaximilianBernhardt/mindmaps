@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * @copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
  *
@@ -24,13 +25,12 @@
 namespace OCA\Mindmaps\Tests\Unit\Service;
 
 use League\FactoryMuffin\Faker\Facade as Faker;
-use OCA\Mindmaps\Db\AclMapper;
-use OCA\Mindmaps\Db\Mindmap;
-use OCA\Mindmaps\Db\MindmapMapper;
-use OCA\Mindmaps\Db\MindmapNodeMapper;
+use OCA\Mindmaps\Db\{
+	AclMapper, Mindmap, MindmapMapper, MindmapNode, MindmapNodeMapper
+};
 use OCA\Mindmaps\Service\MindmapService;
 use OCA\Mindmaps\Tests\Unit\UnitTestCase;
-use OCP\IDBConnection;
+use OCP\{IDBConnection, IGroupManager, IUserManager};
 
 class MindmapServiceTest extends UnitTestCase {
 
@@ -44,6 +44,10 @@ class MindmapServiceTest extends UnitTestCase {
 	private $mindmapNodeMapper;
 	/** @var AclMapper */
 	private $aclMapper;
+	/** @var IUserManager */
+	private $userManager;
+	/** @var IGroupManager */
+	private $groupManager;
 
 	/**
 	 * {@inheritDoc}
@@ -52,35 +56,69 @@ class MindmapServiceTest extends UnitTestCase {
 		parent::setUp();
 		$this->con = \OC::$server->getDatabaseConnection();
 		$this->aclMapper = new AclMapper($this->con);
-		$this->mindmapNodeMapper = new MindmapNodeMapper(($this->con));
-		$this->mindmapMapper = new MindmapMapper($this->con, $this->mindmapNodeMapper, $this->aclMapper);
-		$this->mindmapService = new MindmapService($this->mindmapMapper);
+		$this->mindmapNodeMapper = new MindmapNodeMapper($this->con);
+		$this->userManager = $this->getMockBuilder(IUserManager::class)
+			->disableOriginalConstructor()
+			->getMock();
+		$this->groupManager = $this->getMockBuilder(IGroupManager::class)
+			->disableOriginalConstructor()
+			->getMock();
+		$this->mindmapMapper = new MindmapMapper(
+			$this->con,
+			$this->mindmapNodeMapper,
+			$this->aclMapper,
+			$this->groupManager,
+			$this->userManager
+		);
+		$this->mindmapService = new MindmapService(
+			$this->mindmapMapper,
+			$this->mindmapNodeMapper
+		);
 	}
 
 	/**
 	 * Test the creation of an mindmap object and save it to the database.
 	 *
 	 * @return Mindmap
+	 *
+	 * @throws \OCA\Mindmaps\Exception\BadRequestException
 	 */
-	public function testCreate() {
+	public function testCreate(): Mindmap {
 		/** @var Mindmap $mindmap */
-		$mindmap = $this->fm->instance('OCA\Mindmaps\Db\Mindmap');
-		$mindmapTmp = $this->mindmapService->create($mindmap->getTitle(), $mindmap->getDescription(), $mindmap->getUserId());
-		$this->assertInstanceOf(Mindmap::class, $mindmapTmp);
-		return $mindmapTmp;
+		$mindmap = $this->fm->instance(Mindmap::class);
+		$mindmap = $this->mindmapService->create(
+			$mindmap->getTitle(),
+			$mindmap->getDescription(),
+			$mindmap->getUserId()
+		);
+		$this->assertInstanceOf(Mindmap::class, $mindmap);
+		return $mindmap;
 	}
 
 	/**
 	 * Update the previously created mindmap.
 	 *
 	 * @depends testCreate
+	 *
 	 * @param Mindmap $mindmap
+	 *
 	 * @return Mindmap
+	 *
+	 * @throws \OCA\Mindmaps\Exception\BadRequestException
+	 * @throws \OCA\Mindmaps\Exception\NotFoundException
+	 * @throws \Exception
 	 */
-	public function testUpdate(Mindmap $mindmap) {
-		$title = Faker::sentence(10);
-		$description = Faker::sentence(20);
-		$this->mindmapService->update($mindmap->getId(), $title(), $description(), $mindmap->getUserId());
+	public function testUpdate(Mindmap $mindmap): Mindmap {
+		$title = Faker::sentence(10)();
+		$description = Faker::sentence(20)();
+		/** @var Mindmap $mindmap */
+		$mindmap = $this->mindmapService->update(
+			$mindmap->getId(),
+			$title,
+			$description,
+			$mindmap->getUserId()
+		);
+		$this->assertEquals($title, $mindmap->getTitle());
 		return $mindmap;
 	}
 
@@ -88,9 +126,14 @@ class MindmapServiceTest extends UnitTestCase {
 	 * Delete the previously created mindmap from the database.
 	 *
 	 * @depends testUpdate
+	 *
 	 * @param Mindmap $mindmap
+	 *
+	 * @throws \OCA\Mindmaps\Exception\NotFoundException
+	 * @throws \Exception
 	 */
 	public function testDelete(Mindmap $mindmap) {
-		$this->mindmapService->delete($mindmap->id);
+		$mindmap = $this->mindmapService->delete($mindmap->id, $mindmap->getUserId());
+		$this->assertInstanceOf(Mindmap::class, $mindmap);
 	}
 }

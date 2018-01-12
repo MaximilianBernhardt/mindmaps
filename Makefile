@@ -17,15 +17,12 @@ composer=$(shell which composer 2> /dev/null)
 all: build
 
 # Fetches the PHP and JS dependencies and compiles the JS. If no composer.json
-# is present, the composer step is skipped, if no package.json or js/package.json
-# is present, the npm step is skipped
+# is present, the composer step is skipped, if no js/package.json is present,
+# the npm step is skipped
 .PHONY: build
 build:
 ifneq (,$(wildcard $(CURDIR)/composer.json))
 	make composer
-endif
-ifneq (,$(wildcard $(CURDIR)/package.json))
-	make npm
 endif
 ifneq (,$(wildcard $(CURDIR)/js/package.json))
 	make npm
@@ -35,6 +32,22 @@ endif
 # a copy is fetched from the web
 .PHONY: composer
 composer:
+ifeq (, $(composer))
+	@echo "No composer command available, downloading a copy from the web"
+	mkdir -p $(build_tools_directory)
+	curl -sS https://getcomposer.org/installer | php
+	mv composer.phar $(build_tools_directory)
+	php $(build_tools_directory)/composer.phar install --prefer-dist --no-dev
+	php $(build_tools_directory)/composer.phar update --prefer-dist --no-dev
+else
+	composer install --prefer-dist --no-dev
+	composer update --prefer-dist --no-dev
+endif
+
+# Installs and updates the composer dependencies (with dev). If composer is not
+# installed a copy is fetched from the web
+.PHONY: composer-dev
+composer-dev:
 ifeq (, $(composer))
 	@echo "No composer command available, downloading a copy from the web"
 	mkdir -p $(build_tools_directory)
@@ -50,31 +63,25 @@ endif
 # Installs npm dependencies
 .PHONY: npm
 npm:
-ifeq (,$(wildcard $(CURDIR)/package.json))
-	cd js && $(npm) run build
-else
-	npm run build
+ifneq (,$(wildcard $(CURDIR)/js/package.json))
+	cd js && $(npm) install && $(npm) run build
 endif
 
 # Removes the appstore build
 .PHONY: clean
 clean:
-	rm -rf ./build
+	rm -rf build
 
-# Same as clean but also removes dependencies installed by composer, bower and
-# npm
+# Same as clean but also removes dependencies installed by composer and npm
 .PHONY: distclean
 distclean: clean
 	rm -rf vendor
-	rm -rf node_modules
-	rm -rf js/vendor
+	rm -rf css/vendor
 	rm -rf js/node_modules
 
 # Builds the source and appstore package
 .PHONY: dist
-dist:
-	make source
-	make appstore
+dist: source appstore
 
 # Builds the source package
 .PHONY: source
@@ -85,15 +92,12 @@ source:
 	--exclude-vcs \
 	--exclude="../$(app_name)/build" \
 	--exclude="../$(app_name)/js/node_modules" \
-	--exclude="../$(app_name)/node_modules" \
 	--exclude="../$(app_name)/*.log" \
 	--exclude="../$(app_name)/js/*.log" \
 
 # Builds the source package for the app store, ignores php and js tests
 .PHONY: appstore
-appstore:
-	rm -rf $(appstore_build_directory)
-	rm -rf $(build_source_directory)
+appstore: distclean composer npm
 	mkdir -p $(appstore_build_directory)
 	mkdir -p $(build_source_directory)
 
@@ -102,29 +106,19 @@ appstore:
 	--exclude="tests" \
 	--exclude="Makefile" \
 	--exclude="*.log" \
-	--exclude="phpunit*xml" \
+	--exclude="phpunit*.xml" \
 	--exclude="composer.*" \
 	--exclude="js/node_modules" \
-	--exclude="js/tests" \
-	--exclude="js/test" \
+	--exclude="js/src" \
 	--exclude="js/*.log" \
-	--exclude="js/package.json" \
-	--exclude="js/bower.json" \
-	--exclude="js/karma.*" \
-	--exclude="js/protractor.*" \
-	--exclude="package.json" \
-	--exclude="bower.json" \
-	--exclude="karma.*" \
-	--exclude="protractor.*" \
+	--exclude="js/package*.json" \
+	--exclude="js/tsconfig.json" \
+	--exclude="js/tslint.json" \
+	--exclude="js/webpack.config.js" \
 	--exclude=".*" \
 	--exclude="js/.*" \
 	--exclude="l10n/.tx" \
 	./ $(build_source_directory)/$(app_name)
-
-	@if [ -f $(cert_directory)/$(app_name).key ]; then \
-		echo "Creating integrity file..."; \
-		php ../../occ integrity:sign-app --privateKey="$(cert_directory)/$(app_name).key" --certificate="$(cert_directory)/$(app_name).crt" --path "$(build_source_directory)/$(app_name)"; \
-	fi
 
 	tar cvzf $(appstore_package_name).tar.gz --directory="$(build_source_directory)" $(app_name)
 
@@ -134,6 +128,7 @@ appstore:
 	fi
 
 .PHONY: test
-test: composer
+test: composer-dev npm
 	$(CURDIR)/vendor/phpunit/phpunit/phpunit --coverage-clover clover.xml -c phpunit.xml
 	$(CURDIR)/vendor/phpunit/phpunit/phpunit -c phpunit.integration.xml
+	cd js && $(npm) run test

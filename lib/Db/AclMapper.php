@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * @copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
  *
@@ -23,64 +24,62 @@
 
 namespace OCA\Mindmaps\Db;
 
-use OCP\AppFramework\Db\Mapper;
+use OCA\Mindmaps\AppInfo\Application;
+use OCP\AppFramework\Db\{Entity, Mapper};
 use OCP\IDBConnection;
 
 class AclMapper extends Mapper {
 
-    /**
-     * AclMapper constructor.
-     *
-     * @param IDBConnection $db
-     */
-    public function __construct(IDBConnection $db) {
-        parent::__construct($db, 'mindmap_acl');
-    }
+	/**
+	 * AclMapper constructor.
+	 *
+	 * @param IDBConnection $db
+	 */
+	public function __construct(IDBConnection $db) {
+		parent::__construct($db, Application::MINDMAPS_ACL_TABLE);
+	}
 
-    /**
-     * Return a acl object by given id.
-     *
-     * @param integer $id
-     *
-     * @return \OCP\AppFramework\Db\Entity
-     *
-     * @throws \OCP\AppFramework\Db\DoesNotExistException if not found
-     * @throws \OCP\AppFramework\Db\MultipleObjectsReturnedException if more than one result
-     */
-    public function find($id) {
-        $sql = 'SELECT * FROM ' . $this->getTableName() . ' WHERE id = ?';
-        return $this->findEntity($sql, [$id]);
-    }
+	/**
+	 * Return a acl object by given id.
+	 *
+	 * @param int $id
+	 *
+	 * @return \OCP\AppFramework\Db\Entity
+	 *
+	 * @throws \OCP\AppFramework\Db\DoesNotExistException if not found
+	 * @throws \OCP\AppFramework\Db\MultipleObjectsReturnedException if more than one result
+	 */
+	public function find(int $id): Entity {
+		$sql = 'SELECT * FROM ' . $this->getTableName() . ' WHERE id = ?';
+		return $this->findEntity($sql, [$id]);
+	}
 
-    /**
-     * Return a acl object by given type and participant name.
-     *
-     * @param integer $type
-     * @param string $participant
-     *
-     * @return \OCP\AppFramework\Db\Entity
-     *
-     * @throws \OCP\AppFramework\Db\DoesNotExistException if not found
-     * @throws \OCP\AppFramework\Db\MultipleObjectsReturnedException if more than one result
-     */
-    public function findByParticipant($type, $participant) {
-        $sql = 'SELECT * FROM ' . $this->getTableName() . ' WHERE id = ? AND type = ? AND participant = ?';
-        return $this->findEntity($sql, [$type, $participant]);
-    }
+	/**
+	 * Return a acl object by given type and participant name.
+	 *
+	 * @param int $type
+	 * @param string $participant
+	 *
+	 * @return \OCP\AppFramework\Db\Entity[]
+	 */
+	public function findByParticipant(int $type, string $participant): array {
+		$sql = 'SELECT * FROM ' . $this->getTableName() . ' WHERE type = ? AND participant = ?';
+		return $this->findEntities($sql, [$type, $participant]);
+	}
 
-    /**
-     * Return all acl entities for a specific mindmap grouped by limit and offset.
-     *
-     * @param $mindmapId
-     * @param integer|null $limit
-     * @param integer|null $offset
-     *
-     * @return \OCP\AppFramework\Db\Entity[]
-     */
-    public function findAll($mindmapId, $limit = null, $offset = null) {
-        $sql = 'SELECT * FROM ' . $this->getTableName() . ' WHERE mindmap_id = ?';
-        return $this->findEntities($sql, [$mindmapId], $limit, $offset);
-    }
+	/**
+	 * Return all acl entities for a specific mindmap grouped by limit and offset.
+	 *
+	 * @param $mindmapId
+	 * @param null|int $limit
+	 * @param null|int $offset
+	 *
+	 * @return \OCP\AppFramework\Db\Entity[]
+	 */
+	public function findAll(int $mindmapId, int $limit = null, int $offset = null): array {
+		$sql = 'SELECT * FROM ' . $this->getTableName() . ' WHERE mindmap_id = ?';
+		return $this->findEntities($sql, [$mindmapId], $limit, $offset);
+	}
 
 	/**
 	 * Delete all acls for a given mindmap.

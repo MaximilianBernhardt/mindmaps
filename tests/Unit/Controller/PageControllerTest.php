@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * @copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
  *
@@ -23,6 +24,7 @@
 
 namespace OCA\Mindmaps\Tests\Unit\Controller;
 
+use OCA\Mindmaps\AppInfo\Application;
 use OCA\Mindmaps\Controller\PageController;
 use OCA\Mindmaps\Tests\Unit\UnitTestCase;
 use OCP\AppFramework\Http\TemplateResponse;
@@ -31,31 +33,27 @@ use OCP\IRequest;
 class PageControllerTest extends UnitTestCase {
 
 	/** @var PageController */
-    private $controller;
-    /** @var IRequest */
-    private $request;
-
-    private $userId = 'john';
+	private $controller;
+	/** @var IRequest */
+	private $request;
 
 	/**
 	 * {@inheritDoc}
 	 */
-    public function setUp() {
-        $this->request = $this->getMockBuilder('OCP\IRequest')
-            ->disableOriginalConstructor()
-            ->getMock();
+	public function setUp() {
+		$this->request = $this->getMockBuilder(IRequest::class)
+			->disableOriginalConstructor()
+			->getMock();
 
-        $this->controller = new PageController(
-            'mindmaps', $this->request, $this->userId
-        );
-    }
+		$this->controller = new PageController(Application::APP_NAME, $this->request);
+	}
 
 	/**
 	 * Basic controller index route test.
 	 */
-    public function testIndex() {
-        $result = $this->controller->index();
-        $this->assertEquals('index', $result->getTemplateName());
+	public function testIndex() {
+		$result = $this->controller->index();
+		$this->assertEquals('index', $result->getTemplateName());
 		$this->assertInstanceOf(TemplateResponse::class, $result);
-    }
+	}
 }

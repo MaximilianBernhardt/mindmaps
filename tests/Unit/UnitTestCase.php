@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * @copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
  *
@@ -24,9 +25,9 @@
 namespace OCA\Mindmaps\Tests\Unit;
 
 use League\FactoryMuffin\FactoryMuffin;
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 
-abstract class UnitTestCase extends PHPUnit_Framework_TestCase {
+abstract class UnitTestCase extends TestCase {
 
 	/** @var FactoryMuffin */
 	protected $fm;

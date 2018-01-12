@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * @copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
  *
@@ -23,6 +24,7 @@
 
 namespace OCA\Mindmaps\Tests\Unit\Controller;
 
+use OCA\Mindmaps\AppInfo\Application;
 use OCA\Mindmaps\Controller\MindmapNodeController;
 use OCA\Mindmaps\Service\MindmapNodeService;
 use OCA\Mindmaps\Tests\Unit\UnitTestCase;
@@ -32,36 +34,38 @@ use OCP\IRequest;
 class MindmapNodeControllerTest extends UnitTestCase {
 
 	/** @var MindmapNodeController */
-    private $controller;
-    /** @var IRequest */
-    private $request;
-    /** @var MindmapNodeService */
-    private $mindmapNodeService;
-
-    private $userId = 'john';
+	private $controller;
+	/** @var IRequest */
+	private $request;
+	/** @var MindmapNodeService */
+	private $mindmapNodeService;
+	/** @var string */
+	private $userId = 'john';
 
 	/**
 	 * {@inheritDoc}
 	 */
-    public function setUp() {
-        $this->request = $this->getMockBuilder('OCP\IRequest')
-            ->disableOriginalConstructor()
-            ->getMock();
-    	$this->mindmapNodeService = $this->getMockBuilder(
-            '\OCA\Mindmaps\Service\MindmapNodeService')
-            ->disableOriginalConstructor()
-            ->getMock();
+	public function setUp() {
+		$this->request = $this->getMockBuilder(IRequest::class)
+			->disableOriginalConstructor()
+			->getMock();
+		$this->mindmapNodeService = $this->getMockBuilder(MindmapNodeService::class)
+			->disableOriginalConstructor()
+			->getMock();
 
-        $this->controller = new MindmapNodeController(
-            'mindmaps', $this->request, $this->mindmapNodeService, $this->userId
-        );
-    }
+		$this->controller = new MindmapNodeController(
+			Application::APP_NAME,
+			$this->request,
+			$this->mindmapNodeService,
+			$this->userId
+		);
+	}
 
 	/**
 	 * Basic controller index route test.
 	 */
-    public function testIndex() {
-        $result = $this->controller->index(0);
+	public function testIndex() {
+		$result = $this->controller->index(0);
 		$this->assertInstanceOf(DataResponse::class, $result);
-    }
+	}
 }

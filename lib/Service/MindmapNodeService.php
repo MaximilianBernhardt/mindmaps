@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * @copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
  *
@@ -24,137 +25,195 @@
 namespace OCA\Mindmaps\Service;
 
 use Exception;
-use OCA\Mindmaps\Db\MindmapNode;
-use OCA\Mindmaps\Db\MindmapNodeMapper;
-use OCA\Mindmaps\Exception\BadRequestException;
+use OCA\Mindmaps\Db\{
+	MindmapMapper, MindmapNode, MindmapNodeMapper
+};
+use OCA\Mindmaps\Exception\{BadRequestException, NotFoundException};
+use OCP\AppFramework\Db\Entity;
 
 class MindmapNodeService extends Service {
 
-    private $mindmapNodeMapper;
+	/** @var MindmapMapper */
+	private $mindmapMapper;
+	/** @var MindmapNodeMapper */
+	private $mindmapNodeMapper;
 
-    /**
-     * MindmapNodeService constructor.
-     *
-     * @param MindmapNodeMapper $mindmapNodeMapper
-     */
-    public function __construct(MindmapNodeMapper $mindmapNodeMapper) {
-        parent::__construct($mindmapNodeMapper);
+	/**
+	 * MindmapNodeService constructor.
+	 *
+	 * @param MindmapMapper $mindmapMapper
+	 * @param MindmapNodeMapper $mindmapNodeMapper
+	 */
+	public function __construct(
+		MindmapMapper $mindmapMapper,
+		MindmapNodeMapper $mindmapNodeMapper
+	) {
+		parent::__construct($mindmapNodeMapper);
 
-        $this->mindmapNodeMapper = $mindmapNodeMapper;
-    }
+		$this->mindmapMapper = $mindmapMapper;
+		$this->mindmapNodeMapper = $mindmapNodeMapper;
+	}
 
-    /**
-     * Return all mindmap nodes from mapper class by user id and mindmap id.
-     *
-     * @param integer $mindmapId
-     * @param string $userId
-     *
-     * @return array
-     */
-    public function findAll($mindmapId, $userId) {
-        return $this->mindmapNodeMapper->findAll($mindmapId);
-    }
+	/**
+	 * Return all mindmap nodes from mapper class by user id and mindmap id.
+	 *
+	 * @param int $mindmapId
+	 * @param string $userId
+	 * @param null|int $limit
+	 * @param null|int $offset
+	 *
+	 * @return \OCP\AppFramework\Db\Entity[]
+	 *
+	 * @throws NotFoundException if user has no access to the given mindmap
+	 */
+	public function findAll(int $mindmapId, string $userId, int $limit = null, int $offset = null): array {
+		if (!$this->mindmapMapper->hasUserAccess($mindmapId, $userId)) {
+			throw new NotFoundException();
+		}
+		return $this->mindmapNodeMapper->findAll($mindmapId, $limit, $offset);
+	}
 
-    /**
-     * Create a new mindmap node object and insert it via mapper class.
-     *
-     * @param integer $mindmapId
-     * @param integer $parentId
-     * @param string $label
-     * @param integer $x
-     * @param integer $y
-     * @param string $userId
-     *
-     * @return \OCP\AppFramework\Db\Entity
-     *
-     * @throws BadRequestException if parameters are invalid
-     */
-    public function create($mindmapId, $parentId, $label, $x, $y, $userId) {
-        if (!is_int($mindmapId) || $label === null || $label === '') {
-            throw new BadRequestException();
-        }
+	/**
+	 * Create a new mindmap node object and insert it via mapper class.
+	 *
+	 * @param int $mindmapId
+	 * @param string $label
+	 * @param int $x
+	 * @param int $y
+	 * @param string $userId
+	 * @param null|int $parentId
+	 *
+	 * @return \OCP\AppFramework\Db\Entity
+	 *
+	 * @throws BadRequestException if parameters are invalid
+	 */
+	public function create(int $mindmapId, string $label, int $x, int $y, string $userId, int $parentId = null): Entity {
+		if ($label === null || $label === '') {
+			throw new BadRequestException();
+		}
 
-        $mindmapNode = new MindmapNode();
-        $mindmapNode->setMindmapId($mindmapId);
-        $mindmapNode->setParentId($parentId);
-        $mindmapNode->setLabel($label);
-        $mindmapNode->setX($x);
-        $mindmapNode->setY($y);
-        $mindmapNode->setUserId($userId);
+		$mindmapNode = new MindmapNode();
+		$mindmapNode->setMindmapId($mindmapId);
+		$mindmapNode->setParentId($parentId);
+		$mindmapNode->setLabel($label);
+		$mindmapNode->setX($x);
+		$mindmapNode->setY($y);
+		$mindmapNode->setUserId($userId);
 
-        return $this->mindmapNodeMapper->insert($mindmapNode);
-    }
+		return $this->mindmapNodeMapper->insert($mindmapNode);
+	}
 
-    /**
-     * Find and update a given mindmap node object.
-     *
-     * @param integer $mindmapNodeId
-     * @param integer $parentId
-     * @param string $label
-     * @param integer $x
-     * @param integer $y
-     * @param string $userId
-     *
-     * @return \OCP\AppFramework\Db\Entity
-     *
-     * @throws BadRequestException if parameters are invalid
-     */
-    public function update($mindmapNodeId, $parentId, $label, $x, $y, $userId) {
-        if ($label === null || $label === '') {
-            throw new BadRequestException();
-        }
+	/**
+	 * Find and update a given mindmap node object.
+	 *
+	 * @param int $id
+	 * @param string $label
+	 * @param int $x
+	 * @param int $y
+	 * @param string $userId
+	 * @param null|int $parentId
+	 *
+	 * @return \OCP\AppFramework\Db\Entity
+	 *
+	 * @throws BadRequestException if parameters are invalid
+	 * @throws NotFoundException if user is not allowed to update it
+	 * @throws Exception
+	 */
+	public function update(int $id, string $label, int $x, int $y, string $userId, int $parentId = null): Entity {
+		if ($label === null || $label === '') {
+			throw new BadRequestException();
+		}
 
-        try {
-            $mindmapNode = $this->find($mindmapNodeId);
-            $mindmapNode->setParentId($parentId);
-            $mindmapNode->setLabel($label);
-            $mindmapNode->setX($x);
-            $mindmapNode->setY($y);
+		try {
+			$mindmapNode = $this->find($id);
+			if (!$this->mindmapMapper->hasUserAccess($mindmapNode->getMindmapId(), $userId)) {
+				throw new NotFoundException();
+			}
+			$mindmapNode->setParentId($parentId);
+			$mindmapNode->setLabel($label);
+			$mindmapNode->setX($x);
+			$mindmapNode->setY($y);
 
-            return $this->mindmapNodeMapper->update($mindmapNode);
-        } catch (Exception $e) {
-            $this->handleException($e);
-        }
-        return null;
-    }
+			return $this->mindmapNodeMapper->update($mindmapNode);
+		} catch (Exception $e) {
+			$this->handleException($e);
+		}
+		return null;
+	}
 
-    /**
-     * Find and lock a given mindmap node object.
-     *
-     * @param integer $mindmapNodeId
-     * @param string $userId
-     *
-     * @return \OCP\AppFramework\Db\Entity
-     */
-    public function lock($mindmapNodeId, $userId) {
-        try {
-            $mindmapNode = $this->find($mindmapNodeId);
-            $mindmapNode->setLockedBy($userId);
+	/**
+	 * Find and lock a given mindmap node object.
+	 *
+	 * @param int $id
+	 * @param string $userId
+	 *
+	 * @return \OCP\AppFramework\Db\Entity
+	 *
+	 * @throws BadRequestException if the node is already locked by another user
+	 * @throws Exception
+	 */
+	public function lock(int $id, string $userId): Entity {
+		try {
+			$mindmapNode = $this->find($id);
+			if ($mindmapNode->getLockedBy() !== null) {
+				throw new BadRequestException();
+			}
+			$mindmapNode->setLockedBy($userId);
 
-            return $this->mindmapNodeMapper->update($mindmapNode);
-        } catch (Exception $e) {
-            $this->handleException($e);
-        }
-        return null;
-    }
+			return $this->mindmapNodeMapper->update($mindmapNode);
+		} catch (Exception $e) {
+			$this->handleException($e);
+		}
+		return null;
+	}
 
-    /**
-     * Find and unlock a given mindmap node object.
-     *
-     * @param integer $mindmapNodeId
-     * @param string $userId
-     *
-     * @return \OCP\AppFramework\Db\Entity
-     */
-    public function unlock($mindmapNodeId, $userId) {
-        try {
-            $mindmapNode = $this->find($mindmapNodeId);
-            $mindmapNode->setLockedBy(null);
+	/**
+	 * Find and unlock a given mindmap node object.
+	 *
+	 * @param int $id
+	 * @param string $userId
+	 *
+	 * @return \OCP\AppFramework\Db\Entity
+	 *
+	 * @throws NotFoundException if the user is not allowed to unlock it
+	 * @throws Exception
+	 */
+	public function unlock(int $id, string $userId): Entity {
+		try {
+			$mindmapNode = $this->find($id);
+			if ($mindmapNode->getUserId() !== $userId) {
+				throw new NotFoundException();
+			}
+			$mindmapNode->setLockedBy(null);
 
-            return $this->mindmapNodeMapper->update($mindmapNode);
-        } catch (Exception $e) {
-            $this->handleException($e);
-        }
-        return null;
-    }
+			return $this->mindmapNodeMapper->update($mindmapNode);
+		} catch (Exception $e) {
+			$this->handleException($e);
+		}
+		return null;
+	}
+
+	/**
+	 * Find and delete the entity by given id and user id.
+	 *
+	 * @param int $id
+	 * @param string $userId
+	 *
+	 * @return null|\OCP\AppFramework\Db\Entity
+	 *
+	 * @throws NotFoundException if the mindmap does not exist or user is not allowed to delete it
+	 * @throws Exception
+	 */
+	public function delete(int $id, string $userId): Entity {
+		try {
+			$entity = $this->find($id);
+			if (!$this->mindmapMapper->hasUserAccess($entity->getMindmapId(), $userId)) {
+				throw new NotFoundException();
+			}
+			return $this->mapper->delete($entity);
+		} catch (Exception $e) {
+			$this->handleException($e);
+		}
+		return null;
+	}
 }

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * @copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
  *
@@ -24,6 +25,8 @@
 namespace OCA\Mindmaps\Db;
 
 use JsonSerializable;
+use OCA\Mindmaps\Util;
+use OCP\{IGroupManager, IUserManager, Share};
 
 /**
  * @method string getParticipant()
@@ -35,32 +38,66 @@ use JsonSerializable;
  */
 class Acl extends Model implements JsonSerializable {
 
-    const PERMISSION_TYPE_USER = 0;
-    const PERMISSION_TYPE_GROUP = 1;
+	/** @var IUserManager */
+	private $userManager;
+	/** @var IGroupManager */
+	private $groupManager;
+	/** @var string */
+	protected $participant;
+	/** @var integer */
+	protected $type;
+	/** @var integer */
+	protected $mindmapId;
 
-    protected $participant;
-    protected $type;
-    protected $mindmapId;
+	/**
+	 * Acl constructor.
+	 */
+	public function __construct() {
+		$this->userManager = \OC::$server->query(IUserManager::class);
+		$this->groupManager = \OC::$server->query(IGroupManager::class);
 
-    /**
-     * Acl constructor.
-     */
-    public function __construct() {
-        $this->addType('type', 'integer');
-        $this->addType('mindmapId', 'integer');
-    }
+		$this->addType('type', 'integer');
+		$this->addType('mindmapId', 'integer');
+	}
 
-    /**
-     * Return object as json string.
-     *
-     * @return array
-     */
-    public function jsonSerialize() {
-        return [
+	/**
+	 * Returns the full name of the user / group / circle which is the participant.
+	 *
+	 * @return string
+	 */
+	public function participantDisplayName(): string {
+		if ($this->getType() === Share::SHARE_TYPE_USER) {
+			$user = $this->userManager->get($this->getParticipant());
+			return ($user !== null) ? $user->getDisplayName() : $this->getParticipant();
+		}
+
+		if ($this->getType() === Share::SHARE_TYPE_GROUP) {
+			$group = $this->groupManager->get($this->getParticipant());
+			return ($group !== null) ? $group->getDisplayName() : $this->getParticipant();
+		}
+
+		// Check if the circles app is installed and enabled for the current user
+		if ($this->getType() === Share::SHARE_TYPE_CIRCLE && Util::isCirclesAppEnabled()) {
+			/** @noinspection PhpUnnecessaryFullyQualifiedNameInspection */
+			$circle = \OCA\Circles\Api\v1\Circles::detailsCircle($this->getParticipant());
+			return ($circle !== null) ? $circle->getName() : $this->getParticipant();
+		}
+
+		return $this->getParticipant();
+	}
+
+	/**
+	 * Return object as json string.
+	 *
+	 * @return array
+	 */
+	public function jsonSerialize(): array {
+		return [
 			'id' => $this->id,
 			'participant' => $this->participant,
+			'participantDisplayName' => $this->participantDisplayName(),
 			'type' => $this->type,
 			'mindmapId' => $this->mindmapId
-        ];
-    }
+		];
+	}
 }

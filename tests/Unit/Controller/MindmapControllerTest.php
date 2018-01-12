@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * @copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
  *
@@ -23,6 +24,7 @@
 
 namespace OCA\Mindmaps\Tests\Unit\Controller;
 
+use OCA\Mindmaps\AppInfo\Application;
 use OCA\Mindmaps\Controller\MindmapController;
 use OCA\Mindmaps\Service\MindmapService;
 use OCA\Mindmaps\Tests\Unit\UnitTestCase;
@@ -32,36 +34,38 @@ use OCP\IRequest;
 class MindmapControllerTest extends UnitTestCase {
 
 	/** @var MindmapController */
-    private $controller;
-    /** @var IRequest */
-    private $request;
-    /** @var MindmapService */
-    private $mindmapService;
-
-    private $userId = 'john';
+	private $controller;
+	/** @var IRequest */
+	private $request;
+	/** @var MindmapService */
+	private $mindmapService;
+	/** @var string */
+	private $userId = 'john';
 
 	/**
 	 * {@inheritDoc}
 	 */
-    public function setUp() {
-        $this->request = $this->getMockBuilder('OCP\IRequest')
-            ->disableOriginalConstructor()
-            ->getMock();
-        $this->mindmapService = $this->getMockBuilder(
-            '\OCA\Mindmaps\Service\MindmapService')
-            ->disableOriginalConstructor()
-            ->getMock();
+	public function setUp() {
+		$this->request = $this->getMockBuilder(IRequest::class)
+			->disableOriginalConstructor()
+			->getMock();
+		$this->mindmapService = $this->getMockBuilder(MindmapService::class)
+			->disableOriginalConstructor()
+			->getMock();
 
-        $this->controller = new MindmapController(
-            'mindmaps', $this->request, $this->mindmapService, $this->userId
-        );
-    }
+		$this->controller = new MindmapController(
+			Application::APP_NAME,
+			$this->request,
+			$this->mindmapService,
+			$this->userId
+		);
+	}
 
 	/**
 	 * Basic controller index route test.
 	 */
-    public function testIndex() {
-        $result = $this->controller->index();
+	public function testIndex() {
+		$result = $this->controller->index();
 		$this->assertInstanceOf(DataResponse::class, $result);
-    }
+	}
 }

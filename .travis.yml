@@ -7,9 +7,9 @@ services:
   - postgresql
 
 php:
-  - 5.6
   - 7.0
   - 7.1
+  - 7.2
 
 addons:
   apt:
@@ -18,24 +18,27 @@ addons:
 
 env:
   global:
-    - CORE_BRANCH=stable12
+    - CORE_BRANCH=stable13
     - APP_NAME=mindmaps
   matrix:
     - DB=mysql
-    - DB=sqlite
     - DB=pgsql
+    - DB=sqlite
 
 cache:
   directories:
     - $HOME/.composer/cache
+    - $HOME/.npm
 
 before_install:
+  # Install node + latest npm
+  - nvm install --lts
+  - npm install -g npm@latest
   # Install NC and app
   - wget https://raw.githubusercontent.com/nextcloud/travis_ci/master/before_install.sh
   - bash ./before_install.sh $APP_NAME $CORE_BRANCH $DB
   - cd ../server
   - ./occ app:enable $APP_NAME
-  - ./occ app:check-code $APP_NAME
 
 before_script:
   - cd apps/$APP_NAME
@@ -44,9 +47,6 @@ script:
   # Check info.xml schema validity
   - wget https://apps.nextcloud.com/schema/apps/info.xsd
   - xmllint appinfo/info.xml --schema info.xsd --noout
-  # Check database.xml schema validity
-  - wget https://apps.nextcloud.com/schema/apps/database.xsd
-  - xmllint appinfo/database.xml --schema database.xsd --noout
   # Check PHP syntax errors
   - find . -name \*.php -exec php -l "{}" \;
   # Execute tests

@@ -1,7 +1,13 @@
+js/src/**/*.js
+js/src/**/*.js.map
+node_modules/
 build/
 vendor/
+css/vendor/
+js/bundle.js
 .idea/
 *.lock
 *.iml
 .DS_Store
 Thumbs.db
+package-lock.json

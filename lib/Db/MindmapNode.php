@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * @copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
  *
@@ -43,39 +44,46 @@ use JsonSerializable;
  */
 class MindmapNode extends Model implements JsonSerializable {
 
-    protected $mindmapId;
-    protected $parentId;
-    protected $userId;
-    protected $x;
-    protected $y;
-    protected $label;
-    protected $lockedBy;
+	/** @var integer */
+	protected $mindmapId;
+	/** @var integer */
+	protected $parentId;
+	/** @var string */
+	protected $userId;
+	/** @var integer */
+	protected $x;
+	/** @var integer */
+	protected $y;
+	/** @var string */
+	protected $label;
+	/** @var string */
+	protected $lockedBy;
 
-    /**
-     * MindmapNode constructor.
-     */
-    public function __construct() {
-        $this->addType('mindmapId', 'integer');
-        $this->addType('parentId', 'integer');
-        $this->addType('x', 'integer');
-        $this->addType('y', 'integer');
-    }
+	/**
+	 * MindmapNode constructor.
+	 */
+	public function __construct() {
+		$this->addType('mindmapId', 'integer');
+		$this->addType('parentId', 'integer');
+		$this->addType('x', 'integer');
+		$this->addType('y', 'integer');
+	}
 
-    /**
-     * Return object as json string.
-     *
-     * @return array
-     */
-    public function jsonSerialize() {
-        return [
-            'id' => $this->id,
-            'mindmapId' => $this->mindmapId,
-            'parentId' => $this->parentId,
-            'userId' => $this->userId,
-            'x' => $this->x,
-            'y' => $this->y,
-            'label' => $this->label,
-            'lockedBy' => $this->lockedBy
-        ];
-    }
+	/**
+	 * Return object as json string.
+	 *
+	 * @return array
+	 */
+	public function jsonSerialize(): array {
+		return [
+			'id' => $this->id,
+			'mindmapId' => $this->mindmapId,
+			'parentId' => $this->parentId,
+			'userId' => $this->userId,
+			'x' => $this->x,
+			'y' => $this->y,
+			'label' => $this->label,
+			'lockedBy' => $this->lockedBy
+		];
+	}
 }

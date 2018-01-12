@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * @copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
  *
@@ -23,37 +24,21 @@
 
 namespace OCA\Mindmaps\Controller;
 
+use OCA\Mindmaps\AppInfo\Application;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\TemplateResponse;
-use OCP\IRequest;
 
 class PageController extends Controller {
 
-    private $userId;
-
-    /**
-     * PageController constructor.
-     *
-     * @param string $appName
-     * @param IRequest $request
-     * @param string $userId
-     */
-    public function __construct($appName,
-                                IRequest $request,
-                                $userId) {
-        parent::__construct($appName, $request);
-        $this->userId = $userId;
-    }
-
-    /**
-     * Simple method that renders the index page.
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     *
-     * @return TemplateResponse
-     */
-    public function index() {
-        return new TemplateResponse('mindmaps', 'index');
-    }
+	/**
+	 * Simple method that renders the index page.
+	 *
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 *
+	 * @return TemplateResponse
+	 */
+	public function index(): TemplateResponse {
+		return new TemplateResponse(Application::APP_NAME, 'index');
+	}
 }

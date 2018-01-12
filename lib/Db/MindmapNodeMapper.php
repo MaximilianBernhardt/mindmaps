@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * @copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
  *
@@ -23,53 +24,83 @@
 
 namespace OCA\Mindmaps\Db;
 
-use OCP\AppFramework\Db\Mapper;
+use OCA\Mindmaps\AppInfo\Application;
+use OCP\AppFramework\Db\{Entity, Mapper};
 use OCP\IDBConnection;
 
 class MindmapNodeMapper extends Mapper {
 
-    /**
-     * MindmapNodeMapper constructor.
-     *
-     * @param IDBConnection $db
-     */
-    public function __construct(IDBConnection $db) {
-        parent::__construct($db, 'mindmap_nodes');
-    }
+	/**
+	 * MindmapNodeMapper constructor.
+	 *
+	 * @param IDBConnection $db
+	 */
+	public function __construct(IDBConnection $db) {
+		parent::__construct($db, Application::MINDMAPS_NODES_TABLE);
+	}
 
-    /**
-     * Return a mindmap node object by given id.
-     *
-     * @param integer $id
-     *
-     * @return \OCP\AppFramework\Db\Entity
-     *
-     * @throws \OCP\AppFramework\Db\DoesNotExistException if not found
-     * @throws \OCP\AppFramework\Db\MultipleObjectsReturnedException if more than one result
-     */
-    public function find($id) {
-        $sql = 'SELECT * FROM ' . $this->getTableName() . ' WHERE id = ?';
-        return $this->findEntity($sql, [$id]);
-    }
+	/**
+	 * Return a mindmap node object by given id.
+	 *
+	 * @param int $id
+	 *
+	 * @return \OCP\AppFramework\Db\Entity
+	 *
+	 * @throws \OCP\AppFramework\Db\DoesNotExistException if not found
+	 * @throws \OCP\AppFramework\Db\MultipleObjectsReturnedException if more than one result
+	 */
+	public function find(int $id): Entity {
+		$sql = 'SELECT * FROM ' . $this->getTableName() . ' WHERE id = ?';
+		return $this->findEntity($sql, [$id]);
+	}
 
-    /**
-     * Return all mindmap nodes for a given mindmap.
-     *
-     * @param integer $mindmapId
-     *
-     * @return MindmapNode[]
-     */
-    public function findAll($mindmapId) {
-        $sql = 'SELECT * FROM ' . $this->getTableName() . ' WHERE mindmap_id = ?';
-        return $this->findEntities($sql, [$mindmapId]);
-    }
+	/**
+	 * Return all mindmap nodes for a given mindmap.
+	 *
+	 * @param int $mindmapId
+	 * @param null|int $limit
+	 * @param null|int $offset
+	 *
+	 * @return \OCP\AppFramework\Db\Entity[]
+	 */
+	public function findAll(int $mindmapId, int $limit = null, int $offset = null): array {
+		$sql = 'SELECT * FROM ' . $this->getTableName() . ' WHERE mindmap_id = ?';
+		return $this->findEntities($sql, [$mindmapId], $limit, $offset);
+	}
+
+	/**
+	 * Get the child nodes for a given mindmap node.
+	 *
+	 * @param int $id
+	 *
+	 * @return \OCP\AppFramework\Db\Entity[]
+	 */
+	private function getChildNodes(int $id): array {
+		$sql = 'SELECT * FROM ' . $this->getTableName() . ' WHERE parent_id = ?';
+		return $this->findEntities($sql, [$id]);
+	}
+
+	/**
+	 * Delete a mindmap node and all of its child nodes.
+	 *
+	 * @param Entity $entity
+	 *
+	 * @return \OCP\AppFramework\Db\Entity
+	 */
+	public function delete(Entity $entity): Entity {
+		$children = $this->getChildNodes($entity->getId());
+		foreach ($children as $child) {
+			$this->delete($child);
+		}
+		return parent::delete($entity);
+	}
 
 	/**
 	 * Delete all child nodes for a given mindmap.
 	 *
-	 * @param integer $mindmapId
+	 * @param int $mindmapId
 	 */
-    public function deleteByMindmapId($mindmapId) {
+	public function deleteByMindmapId(int $mindmapId) {
 		$mindmapNodes = $this->findAll($mindmapId);
 		foreach ($mindmapNodes as $node) {
 			$this->delete($node);

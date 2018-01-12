@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * @copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
  *
@@ -28,7 +29,9 @@ use OCP\AppFramework\Http;
 
 class NotFoundException extends Exception {
 
-    public function __construct() {
-        parent::__construct('We could not find the given object.', Http::STATUS_NOT_FOUND);
-    }
+	public function __construct(
+		string $msg = 'We could not find the given object.'
+	) {
+		parent::__construct($msg, Http::STATUS_NOT_FOUND);
+	}
 }

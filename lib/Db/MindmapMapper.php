@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * @copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
  *
@@ -23,72 +24,185 @@
 
 namespace OCA\Mindmaps\Db;
 
-use OCP\AppFramework\Db\Entity;
-use OCP\AppFramework\Db\Mapper;
-use OCP\IDBConnection;
+use OCA\Mindmaps\AppInfo\Application;
+use OCA\Mindmaps\Util;
+use OCP\AppFramework\Db\{
+	DoesNotExistException, Entity, Mapper
+};
+use OCP\{IDBConnection, IGroupManager, IUserManager};
 
 class MindmapMapper extends Mapper {
 
+	/** @var MindmapNodeMapper */
 	private $mindmapNodeMapper;
+	/** @var AclMapper */
 	private $aclMapper;
-
-    /**
-     * MindmapMapper constructor.
-     *
-     * @param IDBConnection $db
-	 * @param MindmapNodeMapper $mindmapNodeMapper
-     */
-    public function __construct(IDBConnection $db, MindmapNodeMapper $mindmapNodeMapper, AclMapper $aclMapper) {
-        parent::__construct($db, 'mindmaps');
-
-        $this->mindmapNodeMapper = $mindmapNodeMapper;
-        $this->aclMapper = $aclMapper;
-    }
-
-    /**
-     * Return a mindmap object by given id.
-     *
-     * @param integer $id
-     *
-     * @return \OCP\AppFramework\Db\Entity
-     *
-     * @throws \OCP\AppFramework\Db\DoesNotExistException if not found
-     * @throws \OCP\AppFramework\Db\MultipleObjectsReturnedException if more than one result
-     */
-    public function find($id) {
-        $sql = 'SELECT * FROM ' . $this->getTableName() . ' WHERE id = ?';
-        return $this->findEntity($sql, [$id]);
-    }
-
-    /**
-     * Return all mindmaps for a specific user also includes shared mindmaps.
-     *
-     * @param string $userId
-     *
-     * @return \OCP\AppFramework\Db\Entity[]
-     */
-    public function findAll($userId) {
-        $sql = 'SELECT ' .
-                '  DISTINCT(*PREFIX*mindmap_acl.mindmap_id) IS NOT NULL AS shared, ' .
-                '  ' . $this->getTableName() . '.* ' .
-                'FROM ' . $this->getTableName() . ' ' .
-                '  LEFT JOIN *PREFIX*mindmap_acl ON ' . $this->getTableName() . '.id = *PREFIX*mindmap_acl.mindmap_id ' .
-                'WHERE ' . $this->getTableName() . '.user_id = ? OR ' .
-                '      *PREFIX*mindmap_acl.participant = ? AND *PREFIX*mindmap_acl.type = ? OR ' .
-                '      *PREFIX*mindmap_acl.participant IN (SELECT gid ' .
-                '                                     FROM *PREFIX*group_user ' .
-                '                                     WHERE uid = ?) AND *PREFIX*mindmap_acl.type = ? ' .
-                'ORDER BY ' . $this->getTableName() . '.id';
-        return $this->findEntities($sql, [$userId, $userId, Acl::PERMISSION_TYPE_USER, $userId, Acl::PERMISSION_TYPE_GROUP]);
-    }
+	/** @var IGroupManager */
+	private $groupManager;
+	/** @var IUserManager */
+	private $userManager;
 
 	/**
-	 * Deletes an entity from the table.
+	 * MindmapMapper constructor.
 	 *
-	 * @param Entity $entity the entity that should be deleted
-	 * @return Entity the deleted entity
+	 * @param IDBConnection $db
+	 * @param MindmapNodeMapper $mindmapNodeMapper
+	 * @param AclMapper $aclMapper
+	 * @param IGroupManager $groupManager
+	 * @param IUserManager $userManager
 	 */
-	public function delete(Entity $entity) {
+	public function __construct(
+		IDBConnection $db,
+		MindmapNodeMapper $mindmapNodeMapper,
+		AclMapper $aclMapper,
+		IGroupManager $groupManager,
+		IUserManager $userManager
+	) {
+		parent::__construct($db, Application::MINDMAPS_TABLE);
+		$this->mindmapNodeMapper = $mindmapNodeMapper;
+		$this->aclMapper = $aclMapper;
+		$this->groupManager = $groupManager;
+		$this->userManager = $userManager;
+	}
+
+	/**
+	 * Converts an array to an SQL string list sth. like 'test', 'test' which can be wrapped by IN ().
+	 *
+	 * @param array $array
+	 * @return string
+	 */
+	private function arrayToSqlList(array $array): string {
+		$result = '';
+		foreach ($array as $key => $value) {
+			$result .= "'" . $value . "'" . (($key !== \count($array) - 1) ? ', ' : '');
+		}
+		return $result;
+	}
+
+	/**
+	 * Return a mindmap object by given id.
+	 *
+	 * @param int $id
+	 *
+	 * @return \OCP\AppFramework\Db\Entity
+	 *
+	 * @throws \OCP\AppFramework\Db\DoesNotExistException if not found
+	 * @throws \OCP\AppFramework\Db\MultipleObjectsReturnedException if more than one result
+	 */
+	public function find(int $id): Entity {
+		$sql = 'SELECT * FROM ' . $this->getTableName() . ' WHERE id = ?';
+		return $this->findEntity($sql, [$id]);
+	}
+
+	/**
+	 * Return a mindmap object by given id and userId (with access check).
+	 *
+	 * @param int $id
+	 * @param string $userId
+	 *
+	 * @return \OCP\AppFramework\Db\Entity
+	 *
+	 * @throws \OCP\AppFramework\Db\DoesNotExistException if not found
+	 * @throws \OCP\AppFramework\Db\MultipleObjectsReturnedException if more than one result
+	 */
+	public function findByUser(int $id, string $userId): Entity {
+		if (!$this->hasUserAccess($id, $userId)) {
+			throw new DoesNotExistException('Mindmap not found.');
+		}
+		$sql = 'SELECT * FROM ' . $this->getTableName() . ' WHERE id = ?';
+		return $this->findEntity($sql, [$id]);
+	}
+
+	/**
+	 * Return all mindmaps for a specific user also includes shared mindmaps.
+	 *
+	 * @param string $userId
+	 * @param null|int $limit
+	 * @param null|int $offset
+	 *
+	 * @return \OCP\AppFramework\Db\Entity[]
+	 */
+	public function findAll(string $userId, int $limit = null, int $offset = null): array {
+		// Get circle ids for the given user
+		$circleIds = [];
+		if (Util::isCirclesAppEnabled()) {
+			/** @noinspection PhpUnnecessaryFullyQualifiedNameInspection */
+			/** @var \OCA\Circles\Model\Circle[] $userCircles */
+			$userCircles = \OCA\Circles\Api\v1\Circles::listCircles(\OCA\Circles\Model\Circle::CIRCLES_ALL);
+			foreach ($userCircles as $circle) {
+				$circleIds[] = $circle->getUniqueId();
+			}
+		}
+		// Get group ids for the given user
+		$user = $this->userManager->get($userId);
+		$groupIds = [];
+		if ($user !== null) {
+			$groupIds = $this->groupManager->getUserGroupIds($user);
+		}
+
+		// The parameter bindings need to be variable depending on the circles / groups
+		$queryParameters = [
+			$userId,
+			$userId,
+			\OCP\Share::SHARE_TYPE_USER
+		];
+
+		// Build the SQL string
+		$sql = 'SELECT ' .
+			'  DISTINCT(*PREFIX*' . Application::MINDMAPS_ACL_TABLE . '.mindmap_id) IS NOT NULL AS shared, ' .
+			'  ' . $this->getTableName() . '.* ' .
+			'FROM ' . $this->getTableName() . ' ' .
+			'  LEFT JOIN *PREFIX*' . Application::MINDMAPS_ACL_TABLE . ' ON ' . $this->getTableName() . '.id = *PREFIX*' . Application::MINDMAPS_ACL_TABLE . '.mindmap_id ' .
+			'WHERE ' . $this->getTableName() . '.user_id = ? OR ' .
+			'      *PREFIX*' . Application::MINDMAPS_ACL_TABLE . '.participant = ? AND *PREFIX*' . Application::MINDMAPS_ACL_TABLE . '.type = ? ';
+
+		// Do we need to query by group?
+		if (\count($groupIds) > 0) {
+			$sql .= 'OR *PREFIX*' . Application::MINDMAPS_ACL_TABLE . '.participant IN (' . $this->arrayToSqlList($groupIds) . ') AND *PREFIX*' . Application::MINDMAPS_ACL_TABLE . '.type = ? ';
+			$queryParameters[] = \OCP\Share::SHARE_TYPE_GROUP;
+		}
+
+		// Do we need to query by circle?
+		if (\count($circleIds) > 0) {
+			$sql .= 'OR *PREFIX*' . Application::MINDMAPS_ACL_TABLE . '.participant IN (' . $this->arrayToSqlList($circleIds) . ') AND *PREFIX*' . Application::MINDMAPS_ACL_TABLE . '.type = ? ';
+			$queryParameters[] = \OCP\Share::SHARE_TYPE_CIRCLE;
+		}
+
+		$sql .= 'ORDER BY ' . $this->getTableName() . '.id';
+
+		return $this->findEntities(
+			$sql,
+			$queryParameters,
+			$limit,
+			$offset
+		);
+	}
+
+	/**
+	 * Check if a given user has access to the passed mindmap.
+	 *
+	 * @param int $mindmapId
+	 * @param string $userId
+	 * @return bool
+	 */
+	public function hasUserAccess(int $mindmapId, string $userId): bool {
+		$userMindmaps = $this->findAll($userId);
+		foreach ($userMindmaps as $mindmap) {
+			if ($mindmap->getId() === $mindmapId) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Deletes an entity and its children from the tables.
+	 *
+	 * @param \OCP\AppFramework\Db\Entity $entity the entity that should be deleted
+	 *
+	 * @return \OCP\AppFramework\Db\Entity the deleted entity
+	 */
+	public function delete(Entity $entity): Entity {
 		$this->mindmapNodeMapper->deleteByMindmapId($entity->getId());
 		$this->aclMapper->deleteByMindmapId($entity->getId());
 		return parent::delete($entity);
