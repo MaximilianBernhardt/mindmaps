@@ -104,8 +104,10 @@ appstore: distclean composer npm
 	rsync -a \
 	--exclude="build" \
 	--exclude="tests" \
+	--exclude="screenshots" \
 	--exclude="Makefile" \
 	--exclude="*.log" \
+	--exclude="*.md" \
 	--exclude="phpunit*.xml" \
 	--exclude="composer.*" \
 	--exclude="js/node_modules" \
