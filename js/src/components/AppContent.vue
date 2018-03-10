@@ -1,5 +1,5 @@
 <!--
-@copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
+@copyright Copyright (c) 2018 Kai Schröer <git@schroeer.co>
 
 @author Kai Schröer <git@schroeer.co>
 
@@ -26,10 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 </template>
 
 <script lang="ts">
-	import {Component, Vue} from 'vue-property-decorator';
+	import { Component, Vue } from 'vue-property-decorator';
 
 	@Component
-	export default class AppContent extends Vue {
-
-	}
+	export default class AppContent extends Vue { }
 </script>

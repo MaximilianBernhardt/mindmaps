@@ -1,5 +1,5 @@
 /**
- * @copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
+ * @copyright Copyright (c) 2018 Kai Schröer <git@schroeer.co>
  *
  * @author Kai Schröer <git@schroeer.co>
  *
@@ -22,9 +22,9 @@
 
 import Model from './Model';
 
-export default class Acl extends Model {
+export default interface Acl extends Model {
 	mindmapId: number;
 	participant: string;
-	participantDisplayName: string;
+	participantDisplayName?: string;
 	type: number;
 }

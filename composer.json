@@ -8,7 +8,7 @@
 		}
 	],
 	"require-dev": {
-		"christophwurst/nextcloud": "dev-master",
+		"christophwurst/nextcloud": "^13.0.0",
 		"phpunit/phpunit": "^6.5.5",
 		"league/factory-muffin": "^3.0.1",
 		"league/factory-muffin-faker": "^2.0.0"

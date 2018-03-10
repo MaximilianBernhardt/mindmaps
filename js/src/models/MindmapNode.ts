@@ -1,5 +1,5 @@
 /**
- * @copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
+ * @copyright Copyright (c) 2018 Kai Schröer <git@schroeer.co>
  *
  * @author Kai Schröer <git@schroeer.co>
  *
@@ -21,16 +21,15 @@
  */
 
 import Model from './Model';
-import * as vis from 'vis';
 
-export default class MindmapNode extends Model implements vis.Node {
+export default interface MindmapNode extends Model {
 	mindmapId: number;
-	parentId: null | number;
+	parentId?: number;
 	userId: string;
 	x: number;
 	y: number;
-	label: string;
-	lockedBy: string;
-	title: string;
-	color: string;
+	label?: string;
+	lockedBy?: string;
+	title?: string;
+	color?: string;
 }

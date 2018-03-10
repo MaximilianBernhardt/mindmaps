@@ -1,5 +1,5 @@
 <!--
-@copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
+@copyright Copyright (c) 2018 Kai Schröer <git@schroeer.co>
 
 @author Kai Schröer <git@schroeer.co>
 
@@ -24,33 +24,33 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		<div id="app-content-wrapper">
 			<div class="popovermenu bubble">
 				<ul>
-					<li>
+					<li v-if="currentNode">
 						<form @submit.prevent="save">
-							<input type="text" :placeholder="t('Node label')" maxlength="255" v-model="currentNode.label">
+							<input type="text" :placeholder="t('mindmaps', 'Node label')" maxlength="255" v-model="currentNode.label">
 							<input type="submit" value="" class="icon-checkmark">
 						</form>
 					</li>
 					<li v-show="showRemove">
 						<a href="#" @click="remove">
 							<span class="icon-delete"></span>
-							<span>{{ t('Delete') }}</span>
+							<span>{{ t('mindmaps', 'Delete') }}</span>
 						</a>
 					</li>
 				</ul>
 			</div>
-			<div id="mindmap" class="loading"></div>
+			<div id="mindmap" v-bind:class="{ loading: isLoading }"></div>
 		</div>
-		<app-sidebar :mindmap="mindmap"></app-sidebar>
+		<app-sidebar v-if="mindmap" :mindmap="mindmap"></app-sidebar>
 	</div>
 </template>
 
 <script lang="ts">
-	import {Component, Vue, Watch} from 'vue-property-decorator';
-	import * as _ from 'lodash';
+	import { Component, Vue, Watch } from 'vue-property-decorator';
 	import * as vis from 'vis';
+
 	import AppSidebar from './AppSidebar.vue';
-	import {MindmapService, MindmapNodeService} from '../services';
-	import {Mindmap, MindmapNode} from '../models';
+	import { MindmapService, MindmapNodeService } from '../services';
+	import { Mindmap, MindmapNode } from '../models';
 
 	@Component({
 		components: {
@@ -64,37 +64,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		private mindmapService: MindmapService;
 		private mindmapNodeService: MindmapNodeService;
 		private timer: number;
-		// @ts-ignore
-		mindmap: Mindmap = new Mindmap();
-		showRemove: boolean = false;
-		currentNode: MindmapNode = new MindmapNode();
+		mindmap: Mindmap | null = null;
+		currentNode: MindmapNode | null = null;
+		isLoading = true;
+		showRemove = false;
 
 		private removeFromMindmap(data: MindmapNode): void {
 			// Delete the edges.
-			this.edges.get({
-				filter: edge => {
-					return edge.to === data.id;
-				}
-			}).forEach(edge => {
-				// @ts-ignore
-				this.edges.remove(edge.id);
-			});
+			this.edges.get({filter: edge => edge.to === data.id})
+				.forEach(edge => this.edges.remove(edge.id));
 			// Delete the current node.
-			this.nodes.get({
-				filter: node => {
-					return node.id === data.id;
-				}
-			}).forEach(node => {
-				this.nodes.remove(node.id);
-			});
+			this.nodes.get({filter: node => node.id === data.id})
+				.forEach(node => this.nodes.remove(node.id));
 			// Call the method for all child nodes.
-			this.nodes.get({
-				filter: node => {
-					return node.parentId === data.id;
-				}
-			}).forEach(node => {
-				this.removeFromMindmap(node);
-			});
+			this.nodes.get({filter: node => node.parentId === data.id})
+				.forEach(node => this.removeFromMindmap(node));
 		}
 
 		private resizeMindmap(): void {
@@ -113,7 +97,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			this.nodes.add(data);
 			this.nodes.forEach(node => {
 				if (!_.isNull(node.parentId)) {
-					this.edges.add({from: node.parentId, to: node.id});
+					this.edges.add({ from: node.parentId, to: node.id });
 				}
 			});
 		}
@@ -128,30 +112,31 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			this.edges = new vis.DataSet();
 			this.mindmapService = new MindmapService();
 			this.mindmapNodeService = new MindmapNodeService();
-
+			// Load mindmap by url parameter
 			const id = parseInt(this.$route.params.id);
 			this.loadMindmap(id);
-
+			// Register resize handler
 			window.onresize = this.resizeMindmap;
 		}
 
 		loadMindmap(id: number): void {
+			// Load the selected mindmap
 			this.mindmapService.get(id).then(response => {
-				$('#mindmap').removeClass('loading');
+				this.isLoading = false;
 				if (!_.isNull(response.data)) {
 					this.mindmap = response.data;
 				}
 			}).catch(error => {
-				$('#mindmap').removeClass('loading');
+				this.isLoading = false;
 				console.error('Error: ' + error.message);
 			});
-
+			// Load the mindmaps nodes
 			this.mindmapNodeService.load(id).then(response => {
 				const container = document.getElementById('mindmap');
 				// Some predefined options
 				const options = {
-					physics: {enabled: false},
-					interaction: {dragNodes: false},
+					physics: { enabled: false },
+					interaction: { dragNodes: false },
 					locale: OC.getLocale()
 				};
 
@@ -164,7 +149,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 					// Initialize the vis.Network object
 					this.network = new vis.Network(
 						container,
-						{nodes: this.nodes, edges: this.edges},
+						{ nodes: this.nodes, edges: this.edges },
 						options
 					);
 					// Initially resize the mindmap and register the click listeners
@@ -179,9 +164,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 				} else {
 					OC.dialogs.alert(t('mindmaps', 'The vis.js Framework is not available!'), t('mindmaps', 'Error'));
 				}
-			}).catch(error => {
-				console.error('Error: ' + error.message);
-			});
+			}).catch(error => console.error('Error: ' + error.message));
 		}
 
 		showPopover(params: any): void {
@@ -197,14 +180,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 				const parentId = parseInt($('#mindmap').data('selected') as string);
 				if (!_.isNaN(parentId)) {
 					this.showRemove = false;
-					this.currentNode = new MindmapNode();
-					this.currentNode.mindmapId = this.mindmap.id;
-					this.currentNode.parentId = parentId;
-					this.currentNode.userId = OC.getCurrentUser().uid;
-					this.currentNode.x = params.pointer.canvas.x;
-					this.currentNode.y = params.pointer.canvas.y;
+					this.currentNode = {
+						mindmapId: this.mindmap.id as number,
+						parentId: parentId,
+						userId: OC.getCurrentUser().uid,
+						x: params.pointer.canvas.x,
+						y: params.pointer.canvas.y
+					};
 				} else {
-					OC.dialogs.alert(t('mindmaps', 'Please select a parent node first!'), t('mindmaps', 'Error'));
+					OC.dialogs.alert(
+						t('mindmaps', 'Please select a parent node first!'),
+						t('mindmaps', 'Error')
+					);
 					return;
 				}
 			}
@@ -228,9 +215,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 				this.mindmapNodeService.update(this.currentNode).then(response => {
 					this.nodes.update(response.data);
 					$('.popovermenu').removeClass('open');
-				}).catch(error => {
-					console.error('Error: ' + error.message);
-				});
+				}).catch(error => console.error('Error: ' + error.message));
 			} else {
 				// Create a new mindmap node
 				this.mindmapNodeService.create(this.currentNode).then(response => {
@@ -239,39 +224,42 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 					}
 					this.nodes.add(response.data);
 					$('.popovermenu').removeClass('open');
-				}).catch(error => {
-					console.error('Error: ' + error.message);
-				});
+				}).catch(error => console.error('Error: ' + error.message));
 			}
 		}
 
 		remove(): void {
-			const mindmapNodeId = parseInt($('#mindmap').data('selected') as string);
-			this.mindmapNodeService.remove(mindmapNodeId).then(response => {
-				// Remove the node and its child nodes from the mindmap
-				this.removeFromMindmap(response.data);
-				$('.popovermenu').removeClass('open');
-				OC.Notification.showTemporary(t('mindmaps', 'Node deleted!'));
-			}).catch(error => {
-				console.error('Error: ' + error.message);
-			});
+			OC.dialogs.confirm(
+				t('mindmaps', 'Are you sure you want to delete this mindmap node?'),
+				t('mindmaps', 'Delete'),
+				(state) => {
+					if (!state) {
+						return;
+					}
+					const mindmapNodeId = parseInt($('#mindmap').data('selected') as string);
+					this.mindmapNodeService.remove(mindmapNodeId).then(response => {
+						// Remove the node and its child nodes from the mindmap
+						this.removeFromMindmap(response.data);
+						$('.popovermenu').removeClass('open');
+						OC.Notification.showTemporary(t('mindmaps', 'Node deleted!'));
+					}).catch(error => console.error('Error: ' + error.message));
+				}
+			);
 		}
 
 		renderChanges(): void {
-			this.mindmapNodeService.load(this.mindmap.id).then(response => {
+			this.mindmapNodeService.load(this.mindmap.id as number).then(response => {
 				// Save the selected node to reselect it after refreshing
 				const node = this.network.getSelectedNodes()[0];
 				// Fill our vis.DataSets with the response data
 				this.parseNetworkData(response.data);
 				// If a node was selected previously reselect it
 				try {
-					this.network.setSelection({nodes: [node], edges: []});
-				} catch(error) {
-					this.network.setSelection({nodes: [], edges: []});
+					this.network.setSelection({ nodes: [node], edges: [] });
+				} catch (error) {
+					this.network.setSelection({ nodes: [], edges: [] });
 				}
-			}).catch(error => {
-				console.error('Error: ' + error.message);
-			});
+			}).catch(error => console.error('Error: ' + error.message));
 		}
 	}
 </script>

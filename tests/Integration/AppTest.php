@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 /**
- * @copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
+ * @copyright Copyright (c) 2018 Kai Schröer <git@schroeer.co>
  *
  * @author Kai Schröer <git@schroeer.co>
  *
@@ -39,12 +39,20 @@ class AppTest extends TestCase {
 	/** @var IAppContainer */
 	private $container;
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public function setUp() {
 		parent::setUp();
 		$app = new App(Application::APP_NAME);
 		$this->container = $app->getContainer();
 	}
 
+	/**
+	 * Test if the app is installed correctly.
+	 *
+	 * @throws \OCP\AppFramework\QueryException
+	 */
 	public function testAppInstalled() {
 		$appManager = $this->container->query(IAppManager::class);
 		$this->assertTrue($appManager->isInstalled(Application::APP_NAME));

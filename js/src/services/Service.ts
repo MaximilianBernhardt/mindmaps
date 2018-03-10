@@ -1,5 +1,5 @@
 /**
- * @copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
+ * @copyright Copyright (c) 2018 Kai Schröer <git@schroeer.co>
  *
  * @author Kai Schröer <git@schroeer.co>
  *
@@ -20,10 +20,9 @@
  *
  */
 
-import Axios, {AxiosPromise} from 'axios';
-import * as _ from 'lodash';
+import Axios, { AxiosPromise } from 'axios';
+
 import Model from '../models/Model';
-import System from '../System';
 
 export default abstract class Service<T extends Model> {
 	protected baseUrl: string;
@@ -31,9 +30,9 @@ export default abstract class Service<T extends Model> {
 	protected data: T[];
 
 	constructor(baseUrl: string) {
-		this.baseUrl = System.generateUrl(baseUrl);
+		this.baseUrl = OC.generateUrl(baseUrl);
 		this.headers = {
-			'requesttoken': System.getRequestToken(),
+			'requesttoken': OC.requestToken,
 			'OCS-APIREQUEST': 'true'
 		};
 		this.data = [];
@@ -79,7 +78,7 @@ export default abstract class Service<T extends Model> {
 	}
 
 	update(obj: T): AxiosPromise<T> {
-		return Axios.put(this.baseUrl + '/' + obj.id,
+		return Axios.put(`${this.baseUrl}/${obj.id}`,
 			obj,
 			{
 				headers: this.headers
@@ -94,14 +93,14 @@ export default abstract class Service<T extends Model> {
 	}
 
 	remove(id: number): AxiosPromise<T> {
-		return Axios.delete(this.baseUrl + '/' + id,
+		return Axios.delete(`${this.baseUrl}/${id}`,
 			{
 				headers: this.headers
 			}
 		).then(response => {
 			let entry = this.find(response.data.id);
 			if (!_.isNull(entry)) {
-				const index = this.data.indexOf(entry);
+				const index = this.data.indexOf(entry as T);
 				this.data.splice(index, 1);
 			}
 			return response;

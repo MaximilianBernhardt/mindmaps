@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 /**
- * @copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
+ * @copyright Copyright (c) 2018 Kai Schröer <git@schroeer.co>
  *
  * @author Kai Schröer <git@schroeer.co>
  *
@@ -25,8 +25,8 @@ declare(strict_types=1);
 namespace OCA\Mindmaps\Migration;
 
 use Doctrine\DBAL\Types\Type;
-use OC\DB\SchemaWrapper;
 use OCA\Mindmaps\AppInfo\Application;
+use OCP\DB\ISchemaWrapper;
 use OCP\Migration\{IOutput, SimpleMigrationStep};
 
 /**
@@ -35,14 +35,20 @@ use OCP\Migration\{IOutput, SimpleMigrationStep};
 class Version001Date20171202120000 extends SimpleMigrationStep {
 
 	/**
+	 * Modify the database schema.
+	 *
 	 * @param IOutput $output
-	 * @param \Closure $schemaClosure The `\Closure` returns a `SchemaWrapper`
+	 * @param \Closure $schemaClosure The `\Closure` returns a `ISchemaWrapper`
 	 * @param array $options
-	 * @return null|SchemaWrapper
+	 *
+	 * @return null|ISchemaWrapper
+	 *
 	 * @since 13.0.0
+	 *
+	 * @throws \Doctrine\DBAL\Schema\SchemaException
 	 */
-	public function changeSchema(IOutput $output, \Closure $schemaClosure, array $options): SchemaWrapper {
-		/** @var SchemaWrapper $schema */
+	public function changeSchema(IOutput $output, \Closure $schemaClosure, array $options): ISchemaWrapper {
+		/** @var ISchemaWrapper $schema */
 		$schema = $schemaClosure();
 
 		// Let occ show some fancy progressbar

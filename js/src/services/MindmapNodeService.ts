@@ -1,5 +1,5 @@
 /**
- * @copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
+ * @copyright Copyright (c) 2018 Kai Schröer <git@schroeer.co>
  *
  * @author Kai Schröer <git@schroeer.co>
  *
@@ -20,11 +20,10 @@
  *
  */
 
-import Axios, {AxiosPromise} from 'axios';
-import * as _ from 'lodash';
+import Axios, { AxiosPromise } from 'axios';
+
 import Service from './Service';
-import {MindmapNode} from '../models';
-import System from '../System';
+import { MindmapNode } from '../models';
 
 export default class MindmapNodeService extends Service<MindmapNode> {
 	constructor() {
@@ -33,19 +32,18 @@ export default class MindmapNodeService extends Service<MindmapNode> {
 
 	load(mindmapId?: number): AxiosPromise<MindmapNode[]> {
 		if (_.isUndefined(mindmapId)) {
-			throw new Error(System.t('Please specify a mindmapId.'));
+			throw new Error(t('mindmaps', 'Please specify a mindmapId.'));
 		}
 
-		return Axios.get(this.baseUrl + '/' + mindmapId, {
+		return Axios.get(`${this.baseUrl}/${mindmapId}`, {
 			headers: this.headers
 		}).then(response => {
 			this.data = response.data;
 			this.data.forEach(node => {
-				node.title = System.t('Author: ') + node.userId;
+				node.title = t('mindmaps', 'Author: ') + node.userId;
 				if (!_.isNull(node.lockedBy)) {
-					node.title = node.title +
-						System.t(' / Locked by: ') +
-						node.lockedBy;
+					node.title = node.title + ' / ' +
+						t('mindmaps', 'Locked by: ') + node.lockedBy;
 					node.color = 'red';
 				}
 			});
@@ -58,7 +56,7 @@ export default class MindmapNodeService extends Service<MindmapNode> {
 	remove(id: number): AxiosPromise<MindmapNode> {
 		let node: any = this.find(id);
 		if (_.isNull(node.parentId)) {
-			throw new Error(System.t('Root Node can´t be deleted.'));
+			throw new Error(t('mindmaps', 'Root Node can´t be deleted.'));
 		}
 		return super.remove(id).then(response => {
 			let index = this.data.indexOf(node);
@@ -70,7 +68,7 @@ export default class MindmapNodeService extends Service<MindmapNode> {
 	}
 
 	lock(id: number): AxiosPromise<MindmapNode> {
-		return Axios.post(this.baseUrl + '/' + id + '/locks',
+		return Axios.post(`${this.baseUrl}/${id}/locks`,
 			{},
 			{
 				headers: this.headers
@@ -78,8 +76,8 @@ export default class MindmapNodeService extends Service<MindmapNode> {
 		).then(response => {
 			let node: any = this.find(id);
 			let index = this.data.indexOf(node);
-			node.title = System.t('Author: ') + node.userId +
-				System.t(' / Locked by: ') + node.lockedBy;
+			node.title = t('mindmaps', 'Author: ') + node.userId + ' / ' +
+				t('mindmaps', 'Locked by: ') + node.lockedBy;
 			node.color = 'red';
 			this.data[index] = node;
 			return response;
@@ -89,14 +87,14 @@ export default class MindmapNodeService extends Service<MindmapNode> {
 	}
 
 	unlock(id: number): AxiosPromise<MindmapNode> {
-		return Axios.delete(this.baseUrl + '/' + id + '/locks',
+		return Axios.delete(`${this.baseUrl}/${id}/locks`,
 			{
 				headers: this.headers
 			}
 		).then(response => {
 			let node: any = this.find(id);
 			let index = this.data.indexOf(node);
-			node.title = System.t('Author: ') + node.userId;
+			node.title = t('mindmaps', 'Author: ') + node.userId;
 			node.color = '#97C2FC';
 			this.data[index] = node;
 			return response.data;

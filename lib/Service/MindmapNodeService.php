@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 /**
- * @copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
+ * @copyright Copyright (c) 2018 Kai Schröer <git@schroeer.co>
  *
  * @author Kai Schröer <git@schroeer.co>
  *
@@ -88,7 +88,7 @@ class MindmapNodeService extends Service {
 	 * @throws BadRequestException if parameters are invalid
 	 */
 	public function create(int $mindmapId, string $label, int $x, int $y, string $userId, int $parentId = null): Entity {
-		if ($label === null || $label === '') {
+		if ($label === null || $label === '' || \strlen($label) > 255) {
 			throw new BadRequestException();
 		}
 
@@ -120,7 +120,7 @@ class MindmapNodeService extends Service {
 	 * @throws Exception
 	 */
 	public function update(int $id, string $label, int $x, int $y, string $userId, int $parentId = null): Entity {
-		if ($label === null || $label === '') {
+		if ($label === null || $label === '' || \strlen($label) > 255) {
 			throw new BadRequestException();
 		}
 

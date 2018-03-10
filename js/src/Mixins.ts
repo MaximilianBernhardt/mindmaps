@@ -1,5 +1,5 @@
 /**
- * @copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
+ * @copyright Copyright (c) 2018 Kai Schröer <git@schroeer.co>
  *
  * @author Kai Schröer <git@schroeer.co>
  *
@@ -20,15 +20,13 @@
  *
  */
 
-import System from './System';
-
 export default {
 	methods: {
-		t(text: string, vars?: any, count?: number, options?: any): string {
-			return System.t(text, vars, count, options);
+		t(app: string, text: string, vars?: any, count?: number, options?: any): string {
+			return t(app, text, vars, count, options);
 		},
-		n(textSingular: string, textPlural: string, count: number, vars?: any, options?: any): string {
-			return System.n(textSingular, textPlural, count, vars, options);
+		n(app: string, textSingular: string, textPlural: string, count: number, vars?: any, options?: any): string {
+			return n(app, textSingular, textPlural, count, vars, options);
 		}
 	}
 }

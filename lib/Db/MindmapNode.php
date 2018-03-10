@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 /**
- * @copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
+ * @copyright Copyright (c) 2018 Kai Schröer <git@schroeer.co>
  *
  * @author Kai Schröer <git@schroeer.co>
  *
@@ -29,13 +29,13 @@ use JsonSerializable;
 /**
  * @method int getMindmapId()
  * @method void setMindmapId(int $mindmapId)
- * @method string getParentId()
+ * @method int getParentId()
  * @method void setParentId(int $parentId)
  * @method string getUserId()
  * @method void setUserId(string $userId)
- * @method string getX()
+ * @method int getX()
  * @method void setX(int $x)
- * @method string getY()
+ * @method int getY()
  * @method void setY(int $y)
  * @method string getLabel()
  * @method void setLabel(string $label)

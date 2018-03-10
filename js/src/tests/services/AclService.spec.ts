@@ -1,5 +1,5 @@
 /**
- * @copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
+ * @copyright Copyright (c) 2018 Kai Schröer <git@schroeer.co>
  *
  * @author Kai Schröer <git@schroeer.co>
  *
@@ -20,11 +20,12 @@
  *
  */
 
-import {assert, expect} from 'chai';
+import { assert, expect } from 'chai';
 import * as moxios from 'moxios';
 import * as sinon from 'sinon';
-import {Acl} from '../../models';
-import {AclService} from '../../services';
+
+import { Acl } from '../../models';
+import { AclService } from '../../services';
 
 describe('AclService', () => {
 	let service: AclService;
@@ -65,7 +66,7 @@ describe('AclService', () => {
 		it('Should return the acl with id 1', () => {
 			const acl = service.find(1);
 			if (acl !== null) {
-				expect(acl.participantDisplayName).to.string(data[0].participantDisplayName);
+				expect(acl.participantDisplayName).to.string(data[0].participantDisplayName as string);
 			}
 		});
 

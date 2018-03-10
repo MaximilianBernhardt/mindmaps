@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 /**
- * @copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
+ * @copyright Copyright (c) 2018 Kai Schröer <git@schroeer.co>
  *
  * @author Kai Schröer <git@schroeer.co>
  *
@@ -50,7 +50,7 @@ abstract class Service {
 	 * @throws NotFoundException
 	 * @throws Exception
 	 */
-	protected function handleException($ex): void {
+	protected function handleException($ex) {
 		if ($ex instanceof DoesNotExistException || $ex instanceof MultipleObjectsReturnedException) {
 			throw new NotFoundException();
 		}

@@ -1,5 +1,5 @@
 /**
- * @copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
+ * @copyright Copyright (c) 2018 Kai Schröer <git@schroeer.co>
  *
  * @author Kai Schröer <git@schroeer.co>
  *
@@ -20,9 +20,10 @@
  *
  */
 
-import Axios, {AxiosPromise} from 'axios';
+import Axios, { AxiosPromise } from 'axios';
+
 import Service from './Service';
-import {Mindmap} from '../models';
+import { Mindmap } from '../models';
 
 export default class MindmapService extends Service<Mindmap> {
 	private active: Mindmap | null;
@@ -33,7 +34,7 @@ export default class MindmapService extends Service<Mindmap> {
 	}
 
 	get(id: number): AxiosPromise<Mindmap> {
-		return Axios.get(this.baseUrl + '/' + id, {
+		return Axios.get(`${this.baseUrl}/${id}`, {
 			headers: this.headers
 		}).then(response => {
 			return response;

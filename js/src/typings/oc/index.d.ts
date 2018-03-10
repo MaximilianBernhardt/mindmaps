@@ -1,5 +1,5 @@
 /**
- * @copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
+ * @copyright Copyright (c) 2018 Kai Schröer <git@schroeer.co>
  *
  * @author Kai Schröer <git@schroeer.co>
  *
@@ -19,6 +19,8 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+
+declare const _: any;
 
 declare const OC: OC;
 
@@ -47,9 +49,11 @@ interface CurrentUser {
 interface Share {
 	SHARE_TYPE_USER: number,
 	SHARE_TYPE_GROUP: number,
-	SHARE_TYPE_REMOTE: number,
+	SHARE_TYPE_LINK: number,
 	SHARE_TYPE_EMAIL: number,
-	SHARE_TYPE_CIRCLE: number
+	SHARE_TYPE_REMOTE: number,
+	SHARE_TYPE_CIRCLE: number,
+	SHARE_TYPE_GUEST: number
 }
 
 interface Apps {
@@ -60,7 +64,7 @@ interface Apps {
 interface Dialogs {
 	alert(text: string, title: string, callback?: () => void, modal?: boolean): void;
 	info(text: string, title: string, callback?: () => void, modal?: boolean): void;
-	confirm(text: string, title: string, callback?: () => void, modal?: boolean): void;
+	confirm(text: string, title: string, callback?: (state?: boolean) => void, modal?: boolean): void;
 	confirmHtml(text: string, title: string, callback?: () => void, modal?: boolean): void;
 	prompt(text: string, title: string, callback?: () => void, modal?: boolean, name?: string, password?: string): void;
 }

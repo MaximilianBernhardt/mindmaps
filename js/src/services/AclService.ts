@@ -1,5 +1,5 @@
 /**
- * @copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
+ * @copyright Copyright (c) 2018 Kai Schröer <git@schroeer.co>
  *
  * @author Kai Schröer <git@schroeer.co>
  *
@@ -20,11 +20,10 @@
  *
  */
 
-import Axios, {AxiosPromise} from 'axios';
-import * as _ from 'lodash';
+import Axios, { AxiosPromise } from 'axios';
+
 import Service from './Service';
-import {Acl} from '../models';
-import System from '../System';
+import { Acl } from '../models';
 
 export default class AclService extends Service<Acl> {
 	constructor() {
@@ -33,10 +32,10 @@ export default class AclService extends Service<Acl> {
 
 	load(mindmapId?: number): AxiosPromise<Acl[]> {
 		if (_.isUndefined(mindmapId)) {
-			throw new Error(System.t('Please specify a mindmapId.'));
+			throw new Error(t('mindmaps', 'Please specify a mindmapId.'));
 		}
 
-		return Axios.get(this.baseUrl + '/' + mindmapId, {
+		return Axios.get(`${this.baseUrl}/${mindmapId}`, {
 			headers: this.headers
 		}).then(response => {
 			this.data = response.data;
@@ -64,7 +63,7 @@ export default class AclService extends Service<Acl> {
 			}
 		).then(response => {
 			if (response.data.ocs.meta.statuscode !== 100) {
-				Promise.reject('Error while searching.');
+				throw new Error(t('mindmaps', 'Error while searching.'));
 			}
 			return response;
 		}).catch(error => {

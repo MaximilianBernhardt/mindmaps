@@ -1,5 +1,5 @@
 /**
- * @copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
+ * @copyright Copyright (c) 2018 Kai Schröer <git@schroeer.co>
  *
  * @author Kai Schröer <git@schroeer.co>
  *
@@ -20,11 +20,12 @@
  *
  */
 
-import {assert, expect} from 'chai';
+import { assert, expect } from 'chai';
 import * as moxios from 'moxios';
 import * as sinon from 'sinon';
-import {MindmapNode} from '../../models';
-import {MindmapNodeService} from '../../services';
+
+import { MindmapNode } from '../../models';
+import { MindmapNodeService } from '../../services';
 
 describe('MindmapNodeService', () => {
 	let service: MindmapNodeService;
@@ -43,7 +44,6 @@ describe('MindmapNodeService', () => {
 			data = [{
 				'id': 1,
 				'mindmapId': 1,
-				'parentId': null,
 				'userId': 'test',
 				'x': 0,
 				'y': 0,
@@ -62,7 +62,7 @@ describe('MindmapNodeService', () => {
 			service.load(data[0].mindmapId).then(onFulfilled);
 
 			moxios.wait(() => {
-				expect(onFulfilled.getCall(0).args[0].data[0].label).to.string(data[0].label);
+				expect(onFulfilled.getCall(0).args[0].data[0].label).to.string(data[0].label as string);
 				done();
 			});
 		});

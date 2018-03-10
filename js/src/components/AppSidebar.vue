@@ -1,5 +1,5 @@
 <!--
-@copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
+@copyright Copyright (c) 2018 Kai Schröer <git@schroeer.co>
 
 @author Kai Schröer <git@schroeer.co>
 
@@ -24,16 +24,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		<div id="sidebar-content">
 			<div class="sidebar-header">
 				<h2>{{ mindmap.title }}</h2>
-				<a class="icon-close" @click="closeSidebar" :title="t('Close')">
-					<span class="hidden-visually">{{ t('Close') }}</span>
+				<a class="icon-close" @click="closeSidebar" :title="t('mindmaps', 'Close')">
+					<span class="hidden-visually">{{ t('mindmaps', 'Close') }}</span>
 				</a>
 			</div>
 			<ul class="tabHeaders">
 				<li class="tabHeader selected" data-tabid="detailsTabView" @click="switchTab">
-					<a href="#">{{ t('Details') }}</a>
+					<a href="#">{{ t('mindmaps', 'Details') }}</a>
 				</li>
 				<li class="tabHeader" data-tabid="sharingTabView" @click="switchTab">
-					<a href="#">{{ t('Sharing') }}</a>
+					<a href="#">{{ t('mindmaps', 'Sharing') }}</a>
 				</li>
 			</ul>
 			<div class="tabsContainer">
@@ -45,10 +45,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 </template>
 
 <script lang="ts">
-	import {Component, Prop, Vue} from 'vue-property-decorator';
+	import { Component, Prop, Vue } from 'vue-property-decorator';
+
 	import DetailsTab from './DetailsTab.vue';
 	import SharingTab from './SharingTab.vue';
-	import {Mindmap} from '../models';
+	import { Mindmap } from '../models';
 
 	@Component({
 		components: {
@@ -58,7 +59,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	})
 	export default class AppSidebar extends Vue {
 		@Prop({required: true})
-		// @ts-ignore
 		mindmap: Mindmap;
 
 		closeSidebar(): void {

@@ -6,7 +6,8 @@
 [![Software License](https://img.shields.io/badge/license-AGPL-brightgreen.svg?style=flat-square)](LICENSE)
 
 This Nextcloud app allows you to create awesome mindmaps together with your colleagues.
-You can easily work together on your mindmaps and see who´s working on which node of the mindmap.
+You can easily share them with other users / groups and even circles on your local instance.
+A lot more cool features are planned for future versions.
 App icon by [Icons8](https://icons8.com) and mindmaps powered by [Vis.js](http://visjs.org/).
 
 ### Features
@@ -42,3 +43,9 @@ to ensure Nextcloud participants can cooperate effectively in a positive and ins
 we can strengthen and support each other.
 
 For more information please review the [guidelines for contributing](https://github.com/nextcloud/server/blob/master/CONTRIBUTING.md) to this repository.
+
+## Licenses
+- Vue.js: [MIT](https://github.com/vuejs/vue/blob/dev/LICENSE)
+- Vis.js: [MIT](https://github.com/almende/vis/blob/master/LICENSE-MIT)
+- Axios: [MIT](https://github.com/axios/axios/blob/master/LICENSE)
+- Markdown it!: [MIT](https://github.com/markdown-it/markdown-it/blob/master/LICENSE)

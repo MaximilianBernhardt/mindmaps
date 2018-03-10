@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 /**
- * @copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
+ * @copyright Copyright (c) 2018 Kai Schröer <git@schroeer.co>
  *
  * @author Kai Schröer <git@schroeer.co>
  *
@@ -33,7 +33,7 @@ use OCP\{IGroupManager, IUserManager, Share};
  * @method void setParticipant(string $participant)
  * @method int getType()
  * @method void setType(int $type)
- * @method string getMindmapId()
+ * @method int getMindmapId()
  * @method void setMindmapId(int $mindmapId)
  */
 class Acl extends Model implements JsonSerializable {

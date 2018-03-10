@@ -1,5 +1,5 @@
 /**
- * @copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
+ * @copyright Copyright (c) 2018 Kai Schröer <git@schroeer.co>
  *
  * @author Kai Schröer <git@schroeer.co>
  *
@@ -20,7 +20,7 @@
  *
  */
 
-import Vue, {ComponentOptions} from 'vue';
+import Vue, { ComponentOptions } from 'vue';
 // @ts-ignore
 import VueRouter from 'vue-router';
 import MindmapView from './components/MindmapView.vue';

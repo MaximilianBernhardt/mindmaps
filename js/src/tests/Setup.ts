@@ -20,15 +20,25 @@
  *
  */
 
-import System from '../System';
 import * as sinon from 'sinon';
 
+let OC = {
+	Share: {
+		SHARE_TYPE_USER: 0,
+		SHARE_TYPE_GROUP: 1,
+		SHARE_TYPE_LINK: 3,
+		SHARE_TYPE_EMAIL: 4,
+		SHARE_TYPE_REMOTE: 6,
+		SHARE_TYPE_CIRCLE: 7,
+		SHARE_TYPE_GUEST: 8,
+	},
+	requestToken: 'TEST',
+	generateUrl: () => {},
+	linkToOCS: () => {}
+};
+
 before(() => {
-	sinon.stub(System, 't').callsFake((text: string) => {
-		return text;
-	});
-	sinon.stub(System, 'generateUrl').callsFake((text: string) => {
-		return text;
-	});
-	sinon.stub(System, 'getRequestToken').returns('TEST');
+	sinon.stub(OC, 'requestToken').returns('TEST');
+	sinon.stub(OC, 'generateUrl').callsFake((url: string) => url);
+	sinon.stub(OC, 'linkToOCS').callsFake((url: string) => url);
 });

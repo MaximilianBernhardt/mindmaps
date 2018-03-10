@@ -1,5 +1,5 @@
 <!--
-@copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
+@copyright Copyright (c) 2018 Kai Schröer <git@schroeer.co>
 
 @author Kai Schröer <git@schroeer.co>
 
@@ -22,17 +22,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 <template>
 	<div id="app-content-wrapper">
 		<div id="emptycontent">
-			<h2>{{ t('No mindmaps') }}</h2>
-			<p>{{ t('Create your first mindmap to get started…') }}</p>
+			<h2>{{ t('mindmaps', 'No mindmaps') }}</h2>
+			<p>{{ t('mindmaps', 'Create your first mindmap to get started…') }}</p>
 		</div>
 	</div>
 </template>
 
 <script lang="ts">
-	import {Component, Vue} from 'vue-property-decorator';
+	import { Component, Vue } from 'vue-property-decorator';
 
 	@Component
-	export default class Index extends Vue {
-
-	}
+	export default class Index extends Vue { }
 </script>

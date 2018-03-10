@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 /**
- * @copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
+ * @copyright Copyright (c) 2018 Kai Schröer <git@schroeer.co>
  *
  * @author Kai Schröer <git@schroeer.co>
  *
@@ -79,7 +79,7 @@ class AclService extends Service {
 	 * @throws BadRequestException if parameters are invalid
 	 */
 	public function create(int $mindmapId, int $type, string $participant): Entity {
-		if ($participant === null || $participant === '') {
+		if ($participant === null || $participant === '' || \strlen($participant) > 255) {
 			throw new BadRequestException();
 		}
 

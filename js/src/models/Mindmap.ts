@@ -1,5 +1,5 @@
 /**
- * @copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
+ * @copyright Copyright (c) 2018 Kai Schröer <git@schroeer.co>
  *
  * @author Kai Schröer <git@schroeer.co>
  *
@@ -22,9 +22,9 @@
 
 import Model from './Model';
 
-export default class Mindmap extends Model {
+export default interface Mindmap extends Model {
 	title: string;
 	description: string;
-	userId: string;
-	shared: boolean;
+	userId?: string;
+	shared?: boolean;
 }

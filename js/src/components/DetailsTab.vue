@@ -1,5 +1,5 @@
 <!--
-@copyright Copyright (c) 2017 Kai Schröer <git@schroeer.co>
+@copyright Copyright (c) 2018 Kai Schröer <git@schroeer.co>
 
 @author Kai Schröer <git@schroeer.co>
 
@@ -22,42 +22,40 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 <template>
 	<div id="detailsTabView" class="tab detailsTabView">
 		<h3>
-			{{ t('Help') }}
-			<span class="icon-info" :title="t('Help')"></span>
+			{{ t('mindmaps', 'Help') }}
+			<span class="icon-info" :title="t('mindmaps', 'Help')"></span>
 		</h3>
 		<p v-html="helpText"></p>
 		<h3>
-			{{ t('Description') }}
-			<button class="icon-edit" :title="t('Save description')" @click="updateDescription">
-				<span class="hidden-visually">{{ t('Save description') }}</span>
+			{{ t('mindmaps', 'Description') }}
+			<button class="icon-edit" :title="t('mindmaps', 'Save description')" @click="updateDescription">
+				<span class="hidden-visually">{{ t('mindmaps', 'Save description') }}</span>
 			</button>
 		</h3>
-		<textarea id="description" v-model="mindmap.description" :placeholder="t('Add a description…')"></textarea>
+		<textarea id="description" v-model="mindmap.description" :placeholder="t('mindmaps', 'Add a description…')"></textarea>
 	</div>
 </template>
 
 <script lang="ts">
-	import {Component, Prop, Vue} from 'vue-property-decorator';
-	import {Mindmap} from '../models';
-	import {MindmapService} from '../services';
+	import { Component, Prop, Vue } from 'vue-property-decorator';
+
+	import { MindmapService } from '../services';
+	import { Mindmap } from '../models';
 
 	@Component
 	export default class DetailsTab extends Vue {
-		// @ts-ignore
-		private helpText = t('mindmaps', 'Select a node and double click anywhere in your mindmap to create a child node. ' +
+		helpText = t('mindmaps', 'Select a node and double click anywhere in your mindmap to create a child node. ' +
 			'You can also edit or delete nodes by simply clicking on them and choose the corresponding action icon. ' +
 			'App icon by <a href="https://icons8.com/" rel="noopener" target="_blank">Icons8</a> and mindmaps powered by ' +
 			'<a href="http://visjs.org/" rel="noopener" target="_blank">Vis.js</a>.');
-		@Prop({required: true})
-		public mindmap: Mindmap;
+		@Prop({ required: true })
+		mindmap: Mindmap;
 
 		updateDescription(): void {
 			const mindmapService = new MindmapService();
-			mindmapService.update(this.mindmap).then(() => {
-				$('#description').addClass('saved');
-			}).catch(error => {
-				console.error('Error: ' + error.message);
-			});
+			mindmapService.update(this.mindmap)
+				.then(() => $('#description').addClass('saved'))
+				.catch(error => console.error('Error: ' + error.message));
 		}
 	}
 </script>
