@@ -44,6 +44,4 @@ class App {
 	}
 }
 
-window.onload = () => {
-	App.start();
-};
+window.onload = () => App.start();

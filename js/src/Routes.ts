@@ -21,7 +21,6 @@
  */
 
 import Vue, { ComponentOptions } from 'vue';
-// @ts-ignore
 import VueRouter from 'vue-router';
 import MindmapView from './components/MindmapView.vue';
 import Index from './components/Index.vue';
